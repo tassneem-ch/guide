@@ -1,0 +1,207 @@
+{
+  "@@locale": "ar",
+  "appTitle": "دليل",
+  "homeTitle": "خطّط لرحلة",
+  "fromLabel": "من",
+  "toLabel": "إلى",
+  "searchHint": "مدينة أو عنوان أو مكان",
+  "useMyLocation": "استعمل موقعي",
+  "locationDenied": "تم رفض إذن الموقع — أدخل المكان يدويًا.",
+  "swapButton": "تبديل",
+  "addWaypoint": "إضافة محطة",
+  "waypoint": "محطة {n}",
+  "@waypoint": {
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "departureTime": "وقت الانطلاق",
+  "departNow": "انطلق الآن",
+  "chooseTime": "اختر وقتاً",
+  "travelMode": "وسيلة التنقل",
+  "modeDriving": "بالسيارة",
+  "modeWalking": "سيراً",
+  "modeCycling": "بالدراجة",
+  "preference": "الأولوية",
+  "prefFastest": "الأسرع",
+  "prefBalanced": "متوازن",
+  "prefPrayerFriendly": "محسّن للصلاة",
+  "prayerStopsLabel": "مواقيت الصلاة",
+  "stopsOptional": "اختياري",
+  "stopsMandatory": "إلزامي",
+  "stopsNone": "بدون",
+  "advancedOptions": "حدود التخطيط",
+  "maxDetour": "أقصى انحراف لزيارة مسجد",
+  "stopDuration": "مدة التوقف",
+  "planningWindow": "نافذة التخطيط (الوصول مبكراً)",
+  "prayerBuffer": "مهلة بعد رفع الأذان",
+  "minutesShort": "{n} د",
+  "@minutesShort": {
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "planRoute": "خطّط المسار",
+  "nextPrayer": "الصلاة القادمة",
+  "todayPrayers": "مواقيت اليوم",
+  "noPrayerData": "مواقيت الصلاة غير متاحة",
+  "prayerFajr": "الفجر",
+  "prayerDhuhr": "الظهر",
+  "prayerAsr": "العصر",
+  "prayerMaghrib": "المغرب",
+  "prayerIsha": "العشاء",
+  "searchFirst": "اختر نقطة البداية لعرض مواقيت الصلاة.",
+  "routesTitle": "مقارنة المسارات",
+  "journeyTitle": "تفاصيل الرحلة",
+  "tripTitle": "مخطط الرحلات",
+  "settingsTitle": "الإعدادات",
+  "labelFastest": "المسار الأسرع",
+  "labelBalanced": "المسار المتوازن",
+  "labelPrayerFriendly": "المسار المحسّن للصلاة",
+  "totalDistance": "المسافة",
+  "totalDuration": "المدة",
+  "arrivalTime": "وقت الوصول",
+  "detourVsFastest": "الانحراف مقارنة بالأسرع",
+  "mosqueStops": "توقفات المساجد",
+  "whyChosen": "لماذا هذا المسار",
+  "uncertainties": "غير مؤكد / غير متحقق",
+  "servedPrayers": "الصلوات المخدومة",
+  "missedPrayers": "صلوات بدون توقف",
+  "selectRoute": "عرض الرحلة",
+  "stopsTimeline": "المحطات والمسافات",
+  "origin": "الانطلاق",
+  "destination": "الوصول",
+  "arriveAt": "الوصول {time}",
+  "@arriveAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "departAt": "المغادرة {time}",
+  "@departAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "prayerAt": "{prayer} في {time}",
+  "@prayerAt": {
+    "placeholders": {
+      "prayer": { "type": "String" },
+      "time": { "type": "String" }
+    }
+  },
+  "rationale": "سبب اختيار هذا التوقف",
+  "alternativeMosques": "{n} مساجد بديلة قريبة",
+  "@alternativeMosques": {
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "mosqueDetails": "تفاصيل المسجد",
+  "openingHours": "ساعات العمل",
+  "hoursUnknown": "مصدر البيانات لم ينشر ساعات العمل.",
+  "hoursUnverified": "الساعات مقدّمة من المزود وغير متحقق منها بشكل مستقل.",
+  "hoursVerified": "الساعات مؤكدة من مصدر البيانات.",
+  "congregationUnknown": "وقت الإقامة غير معروف — تُعرض مواقيت الأذان المحسوبة فقط.",
+  "phone": "الهاتف",
+  "website": "الموقع",
+  "wheelchair": "متاح لمستخدمي كرسي المتحرك",
+  "yes": "نعم",
+  "no": "لا",
+  "notSpecified": "غير محدد",
+  "dataFrom": "مصدر البيانات",
+  "liveData": "بيانات مباشرة",
+  "fixtureData": "بيانات تجريبية",
+  "openInMaps": "فتح الاتجاهات في الخرائط",
+  "detourValue": "انحراف {n} دقيقة",
+  "tripName": "اسم الرحلة",
+  "days": "الأيام",
+  "activities": "الجولات والأنشطة",
+  "addActivity": "إضافة نشاط",
+  "activityName": "اسم النشاط",
+  "durationMin": "المدة (دقيقة)",
+  "dayIndex": "اليوم (يبدأ العدّ من 1)",
+  "planTrip": "خطّط الرحلة",
+  "saveTrip": "حفظ الخطة",
+  "savedTrips": "الخطط المحفوظة",
+  "resume": "استئناف",
+  "delete": "حذف",
+  "conflict": "تعارض",
+  "overnight": "مبيت",
+  "paceLabel": "دقائق الأنشطة المخططة يومياً",
+  "nothingPlanned": "لا توجد خطط بعد.",
+  "language": "اللغة",
+  "prayerMethod": "طريقة حساب الصلاة",
+  "asrSchool": "حساب العصر",
+  "asrStandard": "الجمهور (الشافعي والمالكي والحنبلي)",
+  "asrHanafi": "الحنفي",
+  "highLatitude": "قاعدة خطوط العرض العليا",
+  "unsupportedByProvider": "غير مدعوم من المزود الحالي",
+  "manualAdjustments": "تعديلات يدوية (دقائق)",
+  "timeFormat": "نظام الوقت",
+  "time24": "24 ساعة",
+  "time12": "12 ساعة",
+  "units": "الوحدات",
+  "unitsMetric": "متري (كم)",
+  "unitsImperial": "إمبراطوري (ميل)",
+  "notifications": "تذكيرات توقف الصلاة",
+  "notificationsNote": "يُحفظ التفضيل؛ تنبيهات الجهاز المحلي غير متاحة في هذه النسخة بعد.",
+  "appearance": "المظهر",
+  "darkMode": "الوضع الداكن",
+  "backendStatus": "حالة مزوّدي الخادم",
+  "prayerProviderLabel": "مزوّد مواقيت الصلاة",
+  "demoMode": "بيانات تجريبية (معاينة دون اتصال)",
+  "demoModeNote": "تعرض رحلات نموذجية بوضوح دون خادم خلفي.",
+  "loading": "جارٍ التحميل…",
+  "errorGeneric": "حدث خطأ ما",
+  "errorNetwork": "تعذّر الوصول إلى الخادم — تحقق من عنوان الخادم في الإعدادات.",
+  "errorProvider": "فشل أحد مزوّدي البيانات: {message}",
+  "@errorProvider": {
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "retry": "إعادة المحاولة",
+  "offlineBanner": "دون اتصال — تُعرض البيانات المحفوظة من {time}.",
+  "fixtureBanner": "وضع التجارب نشط — البيانات محاكاة وليست مباشرة.",
+  "noResults": "لا توجد نتائج",
+  "cancel": "إلغاء",
+  "save": "حفظ",
+  "close": "إغلاق",
+  "done": "تم",
+  "requiredField": "مطلوب",
+  "unknown": "غير معروف",
+  "unitsKmValue": "{n} كم",
+  "@unitsKmValue": {
+    "placeholders": { "n": { "type": "String" } }
+  },
+  "hoursMinutes": "{h} س {m} د",
+  "@hoursMinutes": {
+    "placeholders": {
+      "h": { "type": "int" },
+      "m": { "type": "int" }
+    }
+  },
+  "inTime": "بعد {time}",
+  "@inTime": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "countdownDays": "{d}ي {h}س",
+  "@countdownDays": {
+    "placeholders": {
+      "d": { "type": "int" },
+      "h": { "type": "int" }
+    }
+  },
+  "countdownHours": "{h}س {m}د",
+  "@countdownHours": {
+    "placeholders": {
+      "h": { "type": "int" },
+      "m": { "type": "int" }
+    }
+  },
+  "countdownMinutes": "{m}د",
+  "@countdownMinutes": {
+    "placeholders": { "m": { "type": "int" } }
+  },
+  "backendUrl": "عنوان الخادم الخلفي",
+  "backendUrlHint": "مثال: http://10.0.2.2:8000 (محاكي أندرويد)",
+  "resetToDefault": "إعادة الافتراضي",
+  "settingsSaved": "تم حفظ الإعدادات",
+  "providerReport": "الصلاة: {prayer} · المسار: {routing} · المساجد: {mosques}",
+  "@providerReport": {
+    "placeholders": {
+      "prayer": { "type": "String" },
+      "routing": { "type": "String" },
+      "mosques": { "type": "String" }
+    }
+  }
+}

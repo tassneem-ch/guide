@@ -1,0 +1,207 @@
+{
+  "@@locale": "en",
+  "appTitle": "Guide",
+  "homeTitle": "Plan a journey",
+  "fromLabel": "From",
+  "toLabel": "To",
+  "searchHint": "City, address or place",
+  "useMyLocation": "Use my location",
+  "locationDenied": "Location permission denied — enter a place manually.",
+  "swapButton": "Swap",
+  "addWaypoint": "Add stop",
+  "waypoint": "Stop {n}",
+  "@waypoint": {
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "departureTime": "Departure",
+  "departNow": "Leave now",
+  "chooseTime": "Choose time",
+  "travelMode": "Travel mode",
+  "modeDriving": "Driving",
+  "modeWalking": "Walking",
+  "modeCycling": "Cycling",
+  "preference": "Priority",
+  "prefFastest": "Fastest",
+  "prefBalanced": "Balanced",
+  "prefPrayerFriendly": "Prayer-friendly",
+  "prayerStopsLabel": "Prayer stops",
+  "stopsOptional": "Optional",
+  "stopsMandatory": "Mandatory",
+  "stopsNone": "None",
+  "advancedOptions": "Planning limits",
+  "maxDetour": "Maximum mosque detour",
+  "stopDuration": "Stop duration",
+  "planningWindow": "Planning window (arrive early)",
+  "prayerBuffer": "Buffer after prayer start",
+  "minutesShort": "{n} min",
+  "@minutesShort": {
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "planRoute": "Plan route",
+  "nextPrayer": "Next prayer",
+  "todayPrayers": "Today's prayers",
+  "noPrayerData": "Prayer times unavailable",
+  "prayerFajr": "Fajr",
+  "prayerDhuhr": "Dhuhr",
+  "prayerAsr": "Asr",
+  "prayerMaghrib": "Maghrib",
+  "prayerIsha": "Isha",
+  "searchFirst": "Choose a starting point to see prayer times.",
+  "routesTitle": "Route comparison",
+  "journeyTitle": "Journey details",
+  "tripTitle": "Trip planner",
+  "settingsTitle": "Settings",
+  "labelFastest": "Fastest route",
+  "labelBalanced": "Balanced route",
+  "labelPrayerFriendly": "Prayer-friendly route",
+  "totalDistance": "Distance",
+  "totalDuration": "Duration",
+  "arrivalTime": "Arrival",
+  "detourVsFastest": "Detour vs fastest",
+  "mosqueStops": "Mosque stops",
+  "whyChosen": "Why this route",
+  "uncertainties": "Uncertain / unverified",
+  "servedPrayers": "Prayers served",
+  "missedPrayers": "Prayers not stopped for",
+  "selectRoute": "View journey",
+  "stopsTimeline": "Stops and legs",
+  "origin": "Origin",
+  "destination": "Destination",
+  "arriveAt": "Arrive {time}",
+  "@arriveAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "departAt": "Depart {time}",
+  "@departAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "prayerAt": "{prayer} at {time}",
+  "@prayerAt": {
+    "placeholders": {
+      "prayer": { "type": "String" },
+      "time": { "type": "String" }
+    }
+  },
+  "rationale": "Why this stop",
+  "alternativeMosques": "{n} alternative mosques nearby",
+  "@alternativeMosques": {
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "mosqueDetails": "Mosque details",
+  "openingHours": "Opening hours",
+  "hoursUnknown": "Opening hours not published by the data source.",
+  "hoursUnverified": "Hours are provider-supplied and not independently verified.",
+  "hoursVerified": "Hours confirmed by the data source.",
+  "congregationUnknown": "Congregation (iqama) time unknown — only the calculated prayer start is shown.",
+  "phone": "Phone",
+  "website": "Website",
+  "wheelchair": "Wheelchair accessible",
+  "yes": "Yes",
+  "no": "No",
+  "notSpecified": "Not specified",
+  "dataFrom": "Data source",
+  "liveData": "Live data",
+  "fixtureData": "Development data",
+  "openInMaps": "Open directions in maps",
+  "detourValue": "Detour {n} min",
+  "tripName": "Trip name",
+  "days": "Days",
+  "activities": "Sightseeing & activities",
+  "addActivity": "Add activity",
+  "activityName": "Activity name",
+  "durationMin": "Duration (min)",
+  "dayIndex": "Day (0-based starts at 1 in list)",
+  "planTrip": "Plan trip",
+  "saveTrip": "Save itinerary",
+  "savedTrips": "Saved itineraries",
+  "resume": "Resume",
+  "delete": "Delete",
+  "conflict": "Conflict",
+  "overnight": "Overnight",
+  "paceLabel": "Planned activity minutes per day",
+  "nothingPlanned": "Nothing planned yet.",
+  "language": "Language",
+  "prayerMethod": "Prayer calculation method",
+  "asrSchool": "Asr calculation",
+  "asrStandard": "Standard (Shafi'i, Maliki, Hanbali)",
+  "asrHanafi": "Hanafi",
+  "highLatitude": "High-latitude rule",
+  "unsupportedByProvider": "Not supported by the active provider",
+  "manualAdjustments": "Manual adjustments (minutes)",
+  "timeFormat": "Time format",
+  "time24": "24-hour",
+  "time12": "12-hour",
+  "units": "Units",
+  "unitsMetric": "Metric (km)",
+  "unitsImperial": "Imperial (mi)",
+  "notifications": "Prayer stop reminders",
+  "notificationsNote": "Preference is saved; on-device reminder scheduling is not yet available in this build.",
+  "appearance": "Appearance",
+  "darkMode": "Dark theme",
+  "backendStatus": "Backend provider status",
+  "prayerProviderLabel": "Prayer provider",
+  "demoMode": "Demo data (offline preview)",
+  "demoModeNote": "Shows clearly-marked sample journeys without a backend.",
+  "loading": "Loading…",
+  "errorGeneric": "Something went wrong",
+  "errorNetwork": "Cannot reach the server — check the backend address in Settings.",
+  "errorProvider": "A data provider failed: {message}",
+  "@errorProvider": {
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "retry": "Retry",
+  "offlineBanner": "Offline — showing saved data from {time}.",
+  "fixtureBanner": "Development fixtures active — data is simulated, not live.",
+  "noResults": "No results",
+  "cancel": "Cancel",
+  "save": "Save",
+  "close": "Close",
+  "done": "Done",
+  "requiredField": "Required",
+  "unknown": "Unknown",
+  "unitsKmValue": "{n} km",
+  "@unitsKmValue": {
+    "placeholders": { "n": { "type": "String" } }
+  },
+  "hoursMinutes": "{h} h {m} min",
+  "@hoursMinutes": {
+    "placeholders": {
+      "h": { "type": "int" },
+      "m": { "type": "int" }
+    }
+  },
+  "inTime": "in {time}",
+  "@inTime": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "countdownDays": "{d}d {h}h",
+  "@countdownDays": {
+    "placeholders": {
+      "d": { "type": "int" },
+      "h": { "type": "int" }
+    }
+  },
+  "countdownHours": "{h}h {m}m",
+  "@countdownHours": {
+    "placeholders": {
+      "h": { "type": "int" },
+      "m": { "type": "int" }
+    }
+  },
+  "countdownMinutes": "{m}m",
+  "@countdownMinutes": {
+    "placeholders": { "m": { "type": "int" } }
+  },
+  "backendUrl": "Backend address",
+  "backendUrlHint": "e.g. http://10.0.2.2:8000 (Android emulator)",
+  "resetToDefault": "Reset to default",
+  "settingsSaved": "Settings saved",
+  "providerReport": "Prayer: {prayer} · Routing: {routing} · Mosques: {mosques}",
+  "@providerReport": {
+    "placeholders": {
+      "prayer": { "type": "String" },
+      "routing": { "type": "String" },
+      "mosques": { "type": "String" }
+    }
+  }
+}

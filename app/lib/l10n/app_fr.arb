@@ -1,0 +1,207 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Guide",
+  "homeTitle": "Planifier un voyage",
+  "fromLabel": "Départ",
+  "toLabel": "Arrivée",
+  "searchHint": "Ville, adresse ou lieu",
+  "useMyLocation": "Utiliser ma position",
+  "locationDenied": "Permission de localisation refusée — saisissez un lieu manuellement.",
+  "swapButton": "Inverser",
+  "addWaypoint": "Ajouter une étape",
+  "waypoint": "Étape {n}",
+  "@waypoint": {
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "departureTime": "Départ",
+  "departNow": "Partir maintenant",
+  "chooseTime": "Choisir l'heure",
+  "travelMode": "Mode de transport",
+  "modeDriving": "Voiture",
+  "modeWalking": "À pied",
+  "modeCycling": "Vélo",
+  "preference": "Priorité",
+  "prefFastest": "Le plus rapide",
+  "prefBalanced": "Équilibré",
+  "prefPrayerFriendly": "Adapté à la prière",
+  "prayerStopsLabel": "Arrêts prière",
+  "stopsOptional": "Facultatif",
+  "stopsMandatory": "Obligatoire",
+  "stopsNone": "Aucun",
+  "advancedOptions": "Limites de planification",
+  "maxDetour": "Détour maximal vers une mosquée",
+  "stopDuration": "Durée de l'arrêt",
+  "planningWindow": "Fenêtre d'attente (arriver en avance)",
+  "prayerBuffer": "Marge après le début de la prière",
+  "minutesShort": "{n} min",
+  "@minutesShort": {
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "planRoute": "Planifier l'itinéraire",
+  "nextPrayer": "Prochaine prière",
+  "todayPrayers": "Prière d'aujourd'hui",
+  "noPrayerData": "Horaires de prière indisponibles",
+  "prayerFajr": "Fajr",
+  "prayerDhuhr": "Dhouhr",
+  "prayerAsr": "Asr",
+  "prayerMaghrib": "Maghrib",
+  "prayerIsha": "Isha",
+  "searchFirst": "Choisissez un point de départ pour voir les horaires de prière.",
+  "routesTitle": "Comparaison des itinéraires",
+  "journeyTitle": "Détails du voyage",
+  "tripTitle": "Planificateur de voyage",
+  "settingsTitle": "Paramètres",
+  "labelFastest": "Itinéraire le plus rapide",
+  "labelBalanced": "Itinéraire équilibré",
+  "labelPrayerFriendly": "Itinéraire adapté à la prière",
+  "totalDistance": "Distance",
+  "totalDuration": "Durée",
+  "arrivalTime": "Arrivée",
+  "detourVsFastest": "Détour vs le plus rapide",
+  "mosqueStops": "Arrêts mosquée",
+  "whyChosen": "Pourquoi cet itinéraire",
+  "uncertainties": "Incertain / non vérifié",
+  "servedPrayers": "Prières desservies",
+  "missedPrayers": "Prières sans arrêt",
+  "selectRoute": "Voir le voyage",
+  "stopsTimeline": "Étapes et trajets",
+  "origin": "Départ",
+  "destination": "Arrivée",
+  "arriveAt": "Arrivée {time}",
+  "@arriveAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "departAt": "Départ {time}",
+  "@departAt": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "prayerAt": "{prayer} à {time}",
+  "@prayerAt": {
+    "placeholders": {
+      "prayer": { "type": "String" },
+      "time": { "type": "String" }
+    }
+  },
+  "rationale": "Pourquoi cet arrêt",
+  "alternativeMosques": "{n} mosquées alternatives à proximité",
+  "@alternativeMosques": {
+    "placeholders": { "n": { "type": "int" } }
+  },
+  "mosqueDetails": "Détails de la mosquée",
+  "openingHours": "Horaires d'ouverture",
+  "hoursUnknown": "Le fournisseur de données ne publie pas les horaires.",
+  "hoursUnverified": "Horaires fournis par la source, non vérifiés indépendamment.",
+  "hoursVerified": "Horaires confirmés par la source de données.",
+  "congregationUnknown": "Heure d'iqama inconnue — seul le début calculé de la prière est affiché.",
+  "phone": "Téléphone",
+  "website": "Site web",
+  "wheelchair": "Accessible en fauteuil roulant",
+  "yes": "Oui",
+  "no": "Non",
+  "notSpecified": "Non précisé",
+  "dataFrom": "Source des données",
+  "liveData": "Données en direct",
+  "fixtureData": "Données de développement",
+  "openInMaps": "Ouvrir l'itinéraire dans les cartes",
+  "detourValue": "Détour {n} min",
+  "tripName": "Nom du voyage",
+  "days": "Jours",
+  "activities": "Visites et activités",
+  "addActivity": "Ajouter une activité",
+  "activityName": "Nom de l'activité",
+  "durationMin": "Durée (min)",
+  "dayIndex": "Jour (numérotation à partir de 1)",
+  "planTrip": "Planifier le voyage",
+  "saveTrip": "Enregistrer l'itinéraire",
+  "savedTrips": "Itinéraires enregistrés",
+  "resume": "Reprendre",
+  "delete": "Supprimer",
+  "conflict": "Conflit",
+  "overnight": "Nuit sur place",
+  "paceLabel": "Minutes d'activité planifiées par jour",
+  "nothingPlanned": "Rien de planifié pour l'instant.",
+  "language": "Langue",
+  "prayerMethod": "Méthode de calcul des prières",
+  "asrSchool": "Calcul de Asr",
+  "asrStandard": "Standard (chaféite, malikite, hanbalite)",
+  "asrHanafi": "Hanafite",
+  "highLatitude": "Règle des hautes latitudes",
+  "unsupportedByProvider": "Non pris en charge par le fournisseur actif",
+  "manualAdjustments": "Ajustements manuels (minutes)",
+  "timeFormat": "Format horaire",
+  "time24": "24 heures",
+  "time12": "12 heures",
+  "units": "Unités",
+  "unitsMetric": "Métrique (km)",
+  "unitsImperial": "Impérial (miles)",
+  "notifications": "Rappels d'arrêt de prière",
+  "notificationsNote": "La préférence est enregistrée ; les rappels locaux ne sont pas encore disponibles dans cette version.",
+  "appearance": "Apparence",
+  "darkMode": "Thème sombre",
+  "backendStatus": "État des fournisseurs du backend",
+  "prayerProviderLabel": "Fournisseur de prière",
+  "demoMode": "Données de démonstration (aperçu hors ligne)",
+  "demoModeNote": "Affiche des trajets d'exemple clairement marqués sans backend.",
+  "loading": "Chargement…",
+  "errorGeneric": "Une erreur est survenue",
+  "errorNetwork": "Impossible de joindre le serveur — vérifiez l'adresse du backend dans les paramètres.",
+  "errorProvider": "Un fournisseur de données a échoué : {message}",
+  "@errorProvider": {
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "retry": "Réessayer",
+  "offlineBanner": "Hors ligne — données enregistrées du {time}.",
+  "fixtureBanner": "Fixtures de développement actives — données simulées, pas en direct.",
+  "noResults": "Aucun résultat",
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "close": "Fermer",
+  "done": "Terminé",
+  "requiredField": "Obligatoire",
+  "unknown": "Inconnu",
+  "unitsKmValue": "{n} km",
+  "@unitsKmValue": {
+    "placeholders": { "n": { "type": "String" } }
+  },
+  "hoursMinutes": "{h} h {m} min",
+  "@hoursMinutes": {
+    "placeholders": {
+      "h": { "type": "int" },
+      "m": { "type": "int" }
+    }
+  },
+  "inTime": "dans {time}",
+  "@inTime": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "countdownDays": "{d} j {h} h",
+  "@countdownDays": {
+    "placeholders": {
+      "d": { "type": "int" },
+      "h": { "type": "int" }
+    }
+  },
+  "countdownHours": "{h} h {m} min",
+  "@countdownHours": {
+    "placeholders": {
+      "h": { "type": "int" },
+      "m": { "type": "int" }
+    }
+  },
+  "countdownMinutes": "{m} min",
+  "@countdownMinutes": {
+    "placeholders": { "m": { "type": "int" } }
+  },
+  "backendUrl": "Adresse du backend",
+  "backendUrlHint": "ex. http://10.0.2.2:8000 (émulateur Android)",
+  "resetToDefault": "Rétablir par défaut",
+  "settingsSaved": "Paramètres enregistrés",
+  "providerReport": "Prière : {prayer} · Itinéraire : {routing} · Mosquées : {mosques}",
+  "@providerReport": {
+    "placeholders": {
+      "prayer": { "type": "String" },
+      "routing": { "type": "String" },
+      "mosques": { "type": "String" }
+    }
+  }
+}

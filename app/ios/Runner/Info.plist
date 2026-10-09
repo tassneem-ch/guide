@@ -53,6 +53,16 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Guide uses your location only to set the starting point of a route. Location never leaves the app except when you plan a route (coordinates are sent to your configured backend).</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Development convenience: allows the plain-HTTP local backend on a
+		     LAN/emulator. For production builds, remove NSAllowsArbitraryLoads
+		     and serve the backend over HTTPS. -->
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
