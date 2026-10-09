@@ -382,6 +382,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backendStatus => 'Backend provider status';
 
   @override
+  String get mapFallbackNote =>
+      'OpenStreetMap preview — set the Google Maps key to use Google Maps';
+
+  @override
   String get prayerProviderLabel => 'Prayer provider';
 
   @override

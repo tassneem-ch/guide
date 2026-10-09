@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/planner.dart';
@@ -8,10 +9,16 @@ import '../../core/format.dart';
 import '../../domain/models.dart';
 import '../../domain/repositories.dart';
 import '../../l10n/generated/app_localizations.dart';
-import 'package:geolocator/geolocator.dart';
 import '../widgets/common.dart';
 import '../widgets/place_field.dart';
+import '../widgets/route_map.dart';
 
+/// Screen 1 — map-first home.
+///
+/// Layout: a full-bleed map (Google Maps when configured, labeled OSM
+/// fallback otherwise) with the selected points plotted on it; a floating
+/// search card on top; and a draggable sheet containing the full planning
+/// form plus today's prayer times.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -47,11 +54,66 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (state.hasError) {
       final err = state.error;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(err is Failure ? err.message : l10n.errorGeneric)),
+        SnackBar(
+            content:
+                Text(err is Failure ? err.message : l10n.errorGeneric)),
       );
       return;
     }
     context.push('/route');
+  }
+
+  Future<void> _useMyLocation() async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(l10n.locationDenied)));
+        }
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      if (!mounted) return;
+      ref.read(plannerProvider.notifier).setOrigin(GeoPoint(
+            lat: position.latitude,
+            lon: position.longitude,
+            name: l10n.useMyLocation,
+          ));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.locationDenied)));
+      }
+    }
+  }
+
+  Future<void> _pickDepartTime() async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 30)),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))),
+    );
+    if (time == null || !mounted) return;
+    final utc =
+        DateTime(date.year, date.month, date.day, time.hour, time.minute)
+            .toUtc();
+    ref.read(plannerProvider.notifier).setDepartUtc(utc);
   }
 
   @override
@@ -60,60 +122,142 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final form = ref.watch(plannerProvider);
     final settings = ref.watch(settingsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.homeTitle),
-        actions: [
-          IconButton(
-            tooltip: l10n.tripTitle,
-            icon: const Icon(Icons.luggage_outlined),
-            onPressed: () => context.push('/trip'),
-          ),
-          IconButton(
-            tooltip: l10n.settingsTitle,
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const FixtureBanner(),
-          const SizedBox(height: 8),
+    // Points to plot on the home map.
+    final mapPoints = <GeoPoint>[
+      if (form.origin != null) form.origin!,
+      ...form.waypoints,
+      if (form.destination != null) form.destination!,
+    ];
 
-          // --- planner form -------------------------------------------------
-          Card(
+    return Scaffold(
+      body: Stack(
+        children: [
+          // --- full-bleed map -------------------------------------------
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AdaptiveMap(points: mapPoints),
+            ),
+          ),
+
+          // --- floating search card --------------------------------------
+          SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  PlaceField(
-                    label: l10n.fromLabel,
-                    icon: Icons.trip_origin_outlined,
-                    initial: form.origin,
-                    onSelected: (p) =>
-                        ref.read(plannerProvider.notifier).setOrigin(p),
-                  ),
-                  Row(
-                    children: [
-                      const Spacer(),
-                      IconButton.filledTonal(
-                        tooltip: l10n.swapButton,
-                        icon: const Icon(Icons.swap_vert),
-                        onPressed:
-                            ref.read(plannerProvider.notifier).swap,
+                  const FixtureBanner(),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.travel_explore,
+                                  color:
+                                      Theme.of(context).colorScheme.primary),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  l10n.homeTitle,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: l10n.tripTitle,
+                                icon: const Icon(Icons.luggage_outlined),
+                                onPressed: () => context.push('/trip'),
+                              ),
+                              IconButton(
+                                tooltip: l10n.settingsTitle,
+                                icon: const Icon(Icons.settings_outlined),
+                                onPressed: () => context.push('/settings'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          PlaceField(
+                            label: l10n.fromLabel,
+                            icon: Icons.trip_origin_outlined,
+                            initial: form.origin,
+                            onSelected: (p) => ref
+                                .read(plannerProvider.notifier)
+                                .setOrigin(p),
+                          ),
+                          Row(
+                            children: [
+                              const Spacer(),
+                              IconButton.filledTonal(
+                                tooltip: l10n.swapButton,
+                                icon: const Icon(Icons.swap_vert),
+                                onPressed: ref
+                                    .read(plannerProvider.notifier)
+                                    .swap,
+                              ),
+                              const Spacer(),
+                            ],
+                          ),
+                          PlaceField(
+                            label: l10n.toLabel,
+                            icon: Icons.place_outlined,
+                            initial: form.destination,
+                            onSelected: (p) => ref
+                                .read(plannerProvider.notifier)
+                                .setDestination(p),
+                          ),
+                          const SizedBox(height: 8),
+                          FilledButton.icon(
+                            onPressed: _planning ? null : _plan,
+                            icon: _planning
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.route),
+                            label: Text(l10n.planRoute),
+                          ),
+                        ],
                       ),
-                      const Spacer(),
-                    ],
+                    ),
                   ),
-                  PlaceField(
-                    label: l10n.toLabel,
-                    icon: Icons.place_outlined,
-                    initial: form.destination,
-                    onSelected: (p) =>
-                        ref.read(plannerProvider.notifier).setDestination(p),
+                ],
+              ),
+            ),
+          ),
+
+          // --- draggable details sheet ------------------------------------
+          DraggableScrollableSheet(
+            initialChildSize: 0.42,
+            minChildSize: 0.12,
+            maxChildSize: 0.92,
+            builder: (context, scrollController) => Material(
+              elevation: 8,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+              color: Theme.of(context).colorScheme.surface,
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurfaceVariant
+                            .withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
 
                   // waypoints
@@ -155,8 +299,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Expanded(child: Text(l10n.departureTime)),
                       SegmentedButton<bool>(
                         segments: [
-                          ButtonSegment(value: true, label: Text(l10n.departNow)),
-                          ButtonSegment(value: false, label: Text(l10n.chooseTime)),
+                          ButtonSegment(
+                              value: true, label: Text(l10n.departNow)),
+                          ButtonSegment(
+                              value: false, label: Text(l10n.chooseTime)),
                         ],
                         selected: {form.departNow},
                         onSelectionChanged: (sel) {
@@ -304,81 +450,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
 
                   const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: _planning ? null : _plan,
-                    icon: _planning
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.route),
-                    label: Text(l10n.planRoute),
-                  ),
+                  _PrayerCard(point: form.origin ?? form.destination),
                 ],
               ),
             ),
           ),
-
-          const SizedBox(height: 8),
-          _PrayerCard(
-            point: form.origin ?? form.destination,
-          ),
-          const SizedBox(height: 24),
         ],
       ),
     );
-  }
-
-  Future<void> _useMyLocation() async {
-    final l10n = AppLocalizations.of(context);
-    try {
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(l10n.locationDenied)));
-        }
-        return;
-      }
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
-      if (!mounted) return;
-      ref.read(plannerProvider.notifier).setOrigin(GeoPoint(
-            lat: position.latitude,
-            lon: position.longitude,
-            name: l10n.useMyLocation,
-          ));
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.locationDenied)));
-      }
-    }
-  }
-
-  Future<void> _pickDepartTime() async {
-    final now = DateTime.now();
-    final date = await showDatePicker(
-      context: context,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 30)),
-    );
-    if (date == null || !mounted) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))),
-    );
-    if (time == null || !mounted) return;
-    final utc = DateTime(date.year, date.month, date.day, time.hour, time.minute).toUtc();
-    ref.read(plannerProvider.notifier).setDepartUtc(utc);
   }
 
   void _showWaypointSheet(BuildContext context) {
@@ -542,11 +621,11 @@ class _PrayerCard extends ConsumerWidget {
                           dense: true,
                           contentPadding: EdgeInsets.zero,
                           title: Text(prayerName(context, e.name.name)),
-                          subtitle: e.localDate.isEmpty
-                              ? null
-                              : Text(e.localDate),
+                          subtitle:
+                              e.localDate.isEmpty ? null : Text(e.localDate),
                           trailing: Text(
-                            formatTime(context, e.local, use24h: settings.use24h),
+                            formatTime(context, e.local,
+                                use24h: settings.use24h),
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium

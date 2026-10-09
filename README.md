@@ -27,10 +27,13 @@ This app never fabricates data. Every screen carries provenance:
 
 ## Screens
 
-Home (plan a route + today's prayers) → Route comparison (3 alternatives with
-explanations) → Journey details (stop timeline + map) → Mosque details →
-Trip planner (multi-day, activities, overnight stays, surfaced conflicts) →
-Settings (capabilities-driven prayer methods, language, theme, backend URL).
+Map-first UI: a full-screen map (Google Maps when a key is configured,
+labeled OpenStreetMap fallback otherwise) with a floating search card and a
+draggable sheet — Home plans routes and shows today's prayers; Route
+comparison (3 alternatives with explanations); Journey details (stop
+timeline on the map); Mosque details; Trip planner (multi-day, activities,
+overnight stays, surfaced conflicts); Settings (capabilities-driven prayer
+methods, language, theme, backend URL).
 
 ## Repository layout
 
@@ -58,6 +61,28 @@ App (Flutter 3.47+):
 cd app
 flutter pub get
 flutter run --dart-define=BACKEND_URL=http://10.0.2.2:8000   # Android emulator
+```
+
+### Google Maps (optional, recommended for release)
+
+The map UI runs on Google Maps when a Maps SDK key is configured; without a
+key it falls back to a visibly labeled OpenStreetMap view, so the app always
+works. To enable Google Maps:
+
+1. In a **billing-enabled** Google Cloud project, create an API key with
+   **Maps SDK for Android** and **Maps SDK for iOS** enabled.
+2. Restrict the key: Android → package `com.guide.guide` + your signing
+   key's SHA-1; iOS → bundle id `com.guide.app`.
+3. Provide it locally (git-ignored, never committed):
+   - Android: copy `app/android/Secrets.properties.example` →
+     `app/android/secrets.properties` and set `GOOGLE_MAPS_API_KEY`
+     (or export the same env var).
+   - iOS: copy `app/ios/Flutter/Secrets.xcconfig.example` →
+     `app/ios/Flutter/Secrets.xcconfig` and set `GMSS_MAPS_KEY`.
+4. Build with the Google engine selected:
+
+```powershell
+flutter run --dart-define=BACKEND_URL=http://10.0.2.2:8000 --dart-define=USE_GOOGLE_MAPS=true
 ```
 
 No API keys are needed for development: the backend defaults to AlAdhan

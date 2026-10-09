@@ -18,6 +18,7 @@ dependencies:
   go_router: ^18.0.2
   dio: ^5.11.1
   flutter_map: ^8.3.2
+  google_maps_flutter: ^2.12.1
   latlong2: ^0.10.1
   shared_preferences: ^2.5.6
   flutter_secure_storage: ^11.2.0

@@ -53,6 +53,8 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>GMSServicesApiKey</key>
+	<string>$(GMSS_MAPS_KEY)</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Guide uses your location only to set the starting point of a route. Location never leaves the app except when you plan a route (coordinates are sent to your configured backend).</string>
 	<key>NSAppTransportSecurity</key>

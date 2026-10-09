@@ -808,6 +808,12 @@ abstract class AppLocalizations {
   /// **'Backend provider status'**
   String get backendStatus;
 
+  /// No description provided for @mapFallbackNote.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenStreetMap preview — set the Google Maps key to use Google Maps'**
+  String get mapFallbackNote;
+
   /// No description provided for @prayerProviderLabel.
   ///
   /// In en, this message translates to:

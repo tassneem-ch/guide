@@ -35,6 +35,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Google Maps SDK (client rendering key; injected from
+             secrets.properties / GOOGLE_MAPS_API_KEY at build time). An empty
+             value makes the app use the OpenStreetMap fallback renderer. -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${googleMapsApiKey}" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

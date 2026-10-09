@@ -139,6 +139,7 @@
   "appearance": "Appearance",
   "darkMode": "Dark theme",
   "backendStatus": "Backend provider status",
+  "mapFallbackNote": "OpenStreetMap preview — set the Google Maps key to use Google Maps",
   "prayerProviderLabel": "Prayer provider",
   "demoMode": "Demo data (offline preview)",
   "demoModeNote": "Shows clearly-marked sample journeys without a backend.",

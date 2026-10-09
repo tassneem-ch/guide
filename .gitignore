@@ -6,11 +6,14 @@ app/.packages
 app/build/
 app/.pub-cache/
 app/.pub/
-app/pubspec.lock
 app/android/.gradle/
 app/android/local.properties
 app/ios/Pods/
 app/ios/.symlinks/
+
+# Client-side secrets (copy the *.example templates and fill in)
+app/android/secrets.properties
+app/ios/Flutter/Secrets.xcconfig
 
 # Python
 __pycache__/

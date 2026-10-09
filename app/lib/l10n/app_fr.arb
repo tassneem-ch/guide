@@ -139,6 +139,7 @@
   "appearance": "Apparence",
   "darkMode": "Thème sombre",
   "backendStatus": "État des fournisseurs du backend",
+  "mapFallbackNote": "Aperçu OpenStreetMap — renseignez la clé Google Maps pour activer Google Maps",
   "prayerProviderLabel": "Fournisseur de prière",
   "demoMode": "Données de démonstration (aperçu hors ligne)",
   "demoModeNote": "Affiche des trajets d'exemple clairement marqués sans backend.",

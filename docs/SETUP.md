@@ -67,6 +67,50 @@ never appear in the app. The URL can also be changed at runtime in
 It is loudly labeled everywhere (persistent banner, `FIXTURE` provider
 names) so it can never be mistaken for live data.
 
+### Google Maps key (map rendering)
+
+The map UI prefers the **Google Maps SDK** and falls back to a labeled
+OpenStreetMap view when no key is configured — the app is never blank or
+misleading about which map engine you see.
+
+> This is a **client-side rendering key**, a different category from the
+> backend provider keys (which stay server-side). It ships inside the app
+> bundle, so it *must* be restricted per platform in Google Cloud, and the
+> project must have billing enabled (Google Maps Platform bills by usage;
+> verify current pricing and free-tier credit on the pricing page).
+
+1. Google Cloud Console → APIs & Services → Credentials → Create
+   credentials → API key.
+2. Enable **Maps SDK for Android** and **Maps SDK for iOS**.
+3. Restrict the key:
+   - Android apps: package `com.guide.guide` + SHA-1 of your signing key
+     (`certutil -hashfile <keystore> SHA1` or
+     `./gradlew signingReport`).
+   - iOS apps: bundle id `com.guide.app`.
+4. Provide it locally (both files are git-ignored; only `*.example`
+   templates are committed):
+
+   ```powershell
+   # Android
+   Copy-Item app\android\Secrets.properties.example app\android\secrets.properties
+   # then edit GOOGLE_MAPS_API_KEY=...
+
+   # iOS
+   Copy-Item app\ios\Flutter\Secrets.xcconfig.example app\ios\Flutter\Secrets.xcconfig
+   # then edit GMSS_MAPS_KEY=...
+   ```
+
+   Alternatively set the `GOOGLE_MAPS_API_KEY` environment variable for
+   Android builds.
+5. Select the Google engine at build time:
+
+   ```powershell
+   flutter run --dart-define=BACKEND_URL=... --dart-define=USE_GOOGLE_MAPS=true
+   ```
+
+Without step 5 (or without a key in step 4) the app uses the OpenStreetMap
+fallback renderer and labels it on the map itself.
+
 ### Localization
 
 en / ar (RTL) / fr ship with the app; the locale follows the system by

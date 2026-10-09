@@ -381,6 +381,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backendStatus => 'حالة مزوّدي الخادم';
 
   @override
+  String get mapFallbackNote =>
+      'عرض OpenStreetMap — أضف مفتاح خرائط Google لتفعيل خرائط Google';
+
+  @override
   String get prayerProviderLabel => 'مزوّد مواقيت الصلاة';
 
   @override

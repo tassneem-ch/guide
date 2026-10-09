@@ -1,7 +1,23 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// --- Google Maps SDK key (client-side rendering key) -----------------------
+// Read from android/secrets.properties (git-ignored; see Secrets.properties.example)
+// or the GOOGLE_MAPS_API_KEY environment variable. Never commit the real key.
+// Without a key the app falls back to the keyless OpenStreetMap renderer.
+val googleMapsApiKey: String = run {
+    val props = Properties()
+    val file = rootProject.file("secrets.properties")
+    if (file.exists()) file.inputStream().use { props.load(it) }
+    props.getProperty("GOOGLE_MAPS_API_KEY")
+        ?: System.getenv("GOOGLE_MAPS_API_KEY")
+        ?: ""
 }
 
 android {
@@ -27,6 +43,9 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Google Maps SDK key surface (empty => OSM fallback in the app).
+        manifestPlaceholders["googleMapsApiKey"] = googleMapsApiKey
     }
 
     buildTypes {

@@ -385,6 +385,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get backendStatus => 'État des fournisseurs du backend';
 
   @override
+  String get mapFallbackNote =>
+      'Aperçu OpenStreetMap — renseignez la clé Google Maps pour activer Google Maps';
+
+  @override
   String get prayerProviderLabel => 'Fournisseur de prière';
 
   @override

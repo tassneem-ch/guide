@@ -50,7 +50,8 @@ class JourneyScreen extends ConsumerWidget {
               FixtureBanner(providers: data.providers),
               const SizedBox(height: 8),
               if (plan.geometry.length >= 2)
-                RouteMap(geometry: plan.geometry, stops: plan.stops),
+                AdaptiveMap(
+                    points: plan.geometry, stops: plan.stops, height: 240),
               const SizedBox(height: 12),
               Card(
                 child: Padding(

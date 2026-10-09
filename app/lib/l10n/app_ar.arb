@@ -139,6 +139,7 @@
   "appearance": "المظهر",
   "darkMode": "الوضع الداكن",
   "backendStatus": "حالة مزوّدي الخادم",
+  "mapFallbackNote": "عرض OpenStreetMap — أضف مفتاح خرائط Google لتفعيل خرائط Google",
   "prayerProviderLabel": "مزوّد مواقيت الصلاة",
   "demoMode": "بيانات تجريبية (معاينة دون اتصال)",
   "demoModeNote": "تعرض رحلات نموذجية بوضوح دون خادم خلفي.",

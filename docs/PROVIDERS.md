@@ -99,6 +99,24 @@ for offline development. Fixture responses are always marked
 - Rate limiting (`slowapi`, `RATE_LIMIT_PER_MINUTE`) protects the backend
   itself and, transitively, provider quotas.
 
+## In-app map rendering (client-side, not a backend provider)
+
+| Engine | Key needed | Notes |
+|--------|------------|-------|
+| Google Maps SDK (default when configured) | yes (client key) | Selected with `--dart-define=USE_GOOGLE_MAPS=true` + platform key config |
+| OpenStreetMap via `flutter_map` (fallback) | no | Labeled on-screen; keyless dev path |
+
+- The Maps SDK key is a **client rendering key**: it ships in the app
+  bundle. Restrict it per platform (Android package + SHA-1, iOS bundle id)
+  in a billing-enabled Google Cloud project. This is a separate key and
+  project from any server-side `GOOGLE_MAPS_API_KEY` used by backend
+  routing/geocoding providers.
+- The OpenStreetMap fallback uses the **public OSM tile servers**, which
+  have a strict usage policy (light development use only, proper
+  `User-Agent`/attribution — the app shows attribution). For production,
+  self-host tiles or use a commercial tile provider and swap the tile URL
+  in `app/lib/presentation/widgets/route_map.dart`.
+
 ## Switching providers safely
 
 1. Set the env var (`ROUTING_PROVIDER=google`, ...).
