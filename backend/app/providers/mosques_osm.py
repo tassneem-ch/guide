@@ -6,6 +6,7 @@ is different from a verified "no mosques here" answer.
 from __future__ import annotations
 
 import math
+import time
 from datetime import datetime, timezone
 
 import httpx
@@ -26,14 +27,37 @@ out center tags;
 """
 
 
+def _interpreter_url(base: str) -> str:
+    """The configured URL is the service base; the query endpoint is
+    `<base>/interpreter` — without that path Overpass answers 404."""
+    base = base.rstrip("/")
+    return base if base.endswith("/interpreter") else f"{base}/interpreter"
+
+
+# Interactive planning budget: Overpass normally answers in a few seconds;
+# a slow instance should not hold a plan hostage (route planning queries
+# several anchors in sequence).
+_REQUEST_TIMEOUT_S = 8.0
+
+# After every instance failed once, later anchors of the SAME plan get the
+# failure immediately instead of re-trying the whole walk.
+_COOLDOWN_S = 60.0
+
+
 class OsmMosqueProvider:
     name = "osm"
     live = True
 
     def __init__(self) -> None:
         settings = get_settings()
-        self._base = settings.overpass_api_base.rstrip("/")
-        self._client = make_client(timeout=30.0)
+        self._bases = [
+            _interpreter_url(settings.overpass_api_base),
+            *(_interpreter_url(u) for u in settings.overpass_fallbacks),
+        ]
+        self._client = make_client(timeout=_REQUEST_TIMEOUT_S)
+        # Instance that answered with data last — tried first next time.
+        self._preferred: str | None = None
+        self._cooldown_until = 0.0
 
     async def search_near(
         self, center: GeoPoint, radius_m: int, query: str | None = None
@@ -47,19 +71,31 @@ class OsmMosqueProvider:
         overpass_bbox = f"{bbox[0]:.5f},{bbox[1]:.5f},{bbox[2]:.5f},{bbox[3]:.5f}"
         query = _QUERY.format(bbox=overpass_bbox)
 
-        try:
-            response = await self._client.post(
-                self._base, data={"data": query},
-                headers={"User-Agent": "guide-prayer-travel/1.0 (backend)"},
-            )
-            response.raise_for_status()
-            payload = response.json()
-        except (httpx.HTTPError, ValueError) as exc:
+        if time.monotonic() < self._cooldown_until:
+            # Every instance just failed — a sibling anchor of this same
+            # plan would only burn the same time for the same answer.
             return MosqueSearchResult(
                 candidates=[],
                 queried_bbox=bbox,
                 status="no_data",
-                message=f"Overpass unavailable: {exc}. Mosque data could not be checked.",
+                message=(
+                    "Overpass was unavailable moments ago; mosque data was "
+                    "not re-checked. This does not confirm there are no "
+                    "mosques nearby."
+                ),
+            )
+
+        payload = await self._fetch(query)
+        if payload is None:
+            self._cooldown_until = time.monotonic() + _COOLDOWN_S
+            return MosqueSearchResult(
+                candidates=[],
+                queried_bbox=bbox,
+                status="no_data",
+                message=(
+                    "Overpass unavailable on all instances. Mosque data "
+                    "could not be checked."
+                ),
             )
 
         fetched_at = datetime.now(timezone.utc)
@@ -116,3 +152,35 @@ class OsmMosqueProvider:
 
     async def close(self) -> None:
         await self._client.aclose()
+
+    async def _fetch(self, query: str) -> dict | None:
+        """Run the query against Overpass, falling back across instances.
+
+        Public instances fail often (504s, resets) and, when overloaded,
+        may answer 200 with no elements even over well-mapped areas — so
+        an empty answer is cross-checked against the next instance before
+        it is believed. Returns the first response with elements, else
+        the first well-formed empty one, else None (all failed).
+        """
+        order = [b for b in self._bases if b != self._preferred]
+        if self._preferred is not None:
+            order.insert(0, self._preferred)
+        empty: dict | None = None
+        for base in order:
+            try:
+                response = await self._client.post(
+                    base,
+                    data={"data": query},
+                    headers={"User-Agent": "guide-prayer-travel/1.0 (backend)"},
+                )
+                response.raise_for_status()
+                payload = response.json()
+            except (httpx.HTTPError, ValueError):
+                continue
+            if payload.get("elements"):
+                # Remembered so the rest of this plan (and the next one)
+                # skips the failing instances.
+                self._preferred = base
+                return payload
+            empty = empty or payload
+        return empty

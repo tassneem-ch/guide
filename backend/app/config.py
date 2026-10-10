@@ -39,7 +39,14 @@ class Settings(BaseSettings):
     google_route_optimization_key: str = ""
     aladhan_api_base: str = "https://api.aladhan.com/v1"
     osrm_api_base: str = "https://router.project-osrm.org"
-    overpass_api_base: str = "https://overpass-api.de/api"
+    overpass_api_base: str = "https://overpass-api.de/api/interpreter"
+    # Public Overpass instances get overloaded often (504s, resets, and
+    # occasionally empty answers for well-mapped areas) — the mosque
+    # provider falls back through these when the primary fails.
+    overpass_fallbacks: list[str] = [
+        "https://overpass.kumi.systems/api/interpreter",
+        "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    ]
     nominatim_api_base: str = "https://nominatim.openstreetmap.org"
 
     # Engine tuning
