@@ -18,27 +18,85 @@ class ApiGeocodeRepository implements GeocodeRepository {
   final LocalStore _store;
 
   @override
-  Future<List<GeoPoint>> geocode(String query) async {
-    final key = cacheKey('geocode', {'q': query});
+  Future<List<PlaceSuggestion>> suggest(
+    String query, {
+    String? sessionToken,
+    GeoPoint? bias,
+  }) async {
+    final key = cacheKey('suggest', {'q': query});
     try {
-      final json = await _api.getJson('/v1/geocode', query: {'q': query});
-      await _store.write(key, jsonEncode({'fetched_at': DateTime.now().toUtc().toIso8601String(), 'body': json}));
-      final results = json['results'] as List? ?? const [];
-      return results
-          .map((r) => GeoPoint.fromJson(r as Map<String, dynamic>))
-          .toList();
+      final queryParameters = <String, dynamic>{'q': query};
+      if (sessionToken != null) queryParameters['session'] = sessionToken;
+      if (bias != null) {
+        queryParameters['bias_lat'] = bias.lat.toString();
+        queryParameters['bias_lon'] = bias.lon.toString();
+      }
+      final json = await _api
+          .getJson('/v1/places/autocomplete', query: queryParameters);
+      await _store.write(
+          key,
+          jsonEncode({
+            'fetched_at': DateTime.now().toUtc().toIso8601String(),
+            'body': json
+          }));
+      return _parseSuggestions(json);
     } on Failure catch (e) {
       if (e.isNetwork) {
         final cached = CacheEnvelope.tryParse(await _store.read(key) ?? '');
-        if (cached != null) {
-          final results = cached.body['results'] as List? ?? const [];
-          return results
-              .map((r) => GeoPoint.fromJson(r as Map<String, dynamic>))
-              .toList();
-        }
+        if (cached != null) return _parseSuggestions(cached.body);
       }
       rethrow;
     }
+  }
+
+  static List<PlaceSuggestion> _parseSuggestions(Map<String, dynamic> json) {
+    final results = json['results'] as List? ?? const [];
+    return [
+      for (final row in results.cast<Map<String, dynamic>>())
+        if ((row['label'] as String? ?? '').isNotEmpty)
+          PlaceSuggestion(
+            id: row['id'] as String?,
+            label: row['label'] as String,
+            point: row['lat'] == null
+                ? null
+                : GeoPoint.fromJson(row),
+          ),
+    ];
+  }
+
+  @override
+  Future<GeoPoint> resolveSuggestion(
+    PlaceSuggestion suggestion, {
+    String? sessionToken,
+  }) async {
+    final existing = suggestion.point;
+    if (existing != null) return existing;
+    final id = suggestion.id;
+    if (id == null) {
+      throw Failure('Suggestion has no resolvable place id',
+          kind: FailureKind.validation);
+    }
+    final detailsQuery = <String, dynamic>{'id': id};
+    if (sessionToken != null) detailsQuery['session'] = sessionToken;
+    final json =
+        await _api.getJson('/v1/places/details', query: detailsQuery);
+    final result = json['result'];
+    if (result is! Map<String, dynamic>) {
+      throw const Failure('Place details response missing location',
+          kind: FailureKind.server);
+    }
+    return GeoPoint.fromJson(result);
+  }
+
+  @override
+  Future<List<GeoPoint>> geocode(String query) async {
+    final suggestions = await suggest(query);
+    final points = <GeoPoint>[];
+    for (final suggestion in suggestions) {
+      points.add(await resolveSuggestion(suggestion));
+      if (points.length >= 5) break;
+    }
+    return points;
   }
 }
 
@@ -60,19 +118,16 @@ class ApiPrayerRepository implements PrayerRepository {
       'date': dateUtc.toUtc().toIso8601String(),
       'config': config.toJson(),
     });
-    final query = {
-      'lat': point.lat.toString(),
-      'lon': point.lon.toString(),
+    // The backend receives an instant and resolves the *location's* local
+    // calendar day server-side (IANA zone via timezonefinder) — the phone's
+    // timezone never decides what day it is elsewhere.
+    final body = {
+      'point': point.toJson(),
       'date': dateUtc.toUtc().toIso8601String(),
-      'method': config.method,
-      'school': config.school,
-      'high_latitude_rule': config.highLatitudeRule,
-      'adjustments': config.adjustments.entries
-          .map((e) => '${e.key}:${e.value}')
-          .join(','),
+      'config': config.toJson(),
     };
     try {
-      final json = await _api.getJson('/v1/prayers', query: query);
+      final json = await _api.postJson('/v1/prayer-times', body: body);
       await _store.write(
           key,
           jsonEncode({
@@ -93,7 +148,7 @@ class ApiPrayerRepository implements PrayerRepository {
   Future<PrayerCapabilities> capabilities() async {
     const key = 'prayer:capabilities';
     try {
-      final json = await _api.getJson('/v1/prayers/capabilities');
+      final json = await _api.getJson('/v1/prayer-times/capabilities');
       await _store.write(
           key,
           jsonEncode({

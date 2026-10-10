@@ -82,6 +82,22 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
+          // ---- prayer data source ------------------------------------------
+          SectionHeader(l10n.prayerSourceTitle),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.cloud_sync_outlined),
+              title: Text(l10n.prayerSourceTitle),
+              subtitle: Text(switch (settings.prayerSource) {
+                'backend' => l10n.prayerSourceBackend,
+                'aladhan' => l10n.prayerSourceAladhan,
+                _ => l10n.prayerSourceAuto,
+              }),
+              enabled: !settings.demoMode,
+              onTap: () => _pickPrayerSource(context, ref, settings),
+            ),
+          ),
+
           // ---- prayer settings (capabilities-driven) -----------------------
           SectionHeader(l10n.prayerMethod),
           caps.when(
@@ -301,6 +317,36 @@ class SettingsScreen extends ConsumerWidget {
                 ref
                     .read(settingsProvider.notifier)
                     .setPrayerMethod(m.id, supportsAdjustments: caps.manualAdjustments);
+                Navigator.of(sheetContext).pop();
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _pickPrayerSource(
+      BuildContext context, WidgetRef ref, AppSettings settings) {
+    final l10n = AppLocalizations.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => ListView(
+        shrinkWrap: true,
+        children: [
+          for (final (value, label) in [
+            ('auto', l10n.prayerSourceAuto),
+            ('backend', l10n.prayerSourceBackend),
+            ('aladhan', l10n.prayerSourceAladhan),
+          ])
+            ListTile(
+              title: Text(label),
+              selected: value == settings.prayerSource,
+              trailing: value == settings.prayerSource
+                  ? const Icon(Icons.check)
+                  : null,
+              onTap: () {
+                ref.read(settingsProvider.notifier).setPrayerSource(value);
                 Navigator.of(sheetContext).pop();
               },
             ),

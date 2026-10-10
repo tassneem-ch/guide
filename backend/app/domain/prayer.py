@@ -60,6 +60,14 @@ class PrayerMethod(str, Enum):
     FRANCE = "france"
     RUSSIA = "russia"
     MOON_SIGHTING_COMMITTEE = "moon_sighting"
+    DUBAI = "dubai"
+    JAKIM = "jakim"                 # Malaysia
+    TUNISIA = "tunisia"
+    ALGERIA = "algeria"
+    KEMENAG = "kemenag"             # Indonesia
+    MOROCCO = "morocco"
+    PORTUGAL = "portugal"
+    JORDAN = "jordan"
     CUSTOM = "custom"                    # provider-independent: user angle/tune overrides
 
 

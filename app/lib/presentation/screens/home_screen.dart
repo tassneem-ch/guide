@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -97,6 +99,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  Future<void> _onMapTap(GeoPoint point) async {
+    final l10n = AppLocalizations.of(context);
+    final label = '${point.lat.toStringAsFixed(5)}, '
+        '${point.lon.toStringAsFixed(5)}';
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.trip_origin_outlined),
+              title: Text(l10n.fromLabel),
+              onTap: () => Navigator.of(sheetContext).pop('from'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.place_outlined),
+              title: Text(l10n.toLabel),
+              onTap: () => Navigator.of(sheetContext).pop('to'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+    final picked = point.copyWith(name: label);
+    final planner = ref.read(plannerProvider.notifier);
+    if (choice == 'from') {
+      planner.setOrigin(picked);
+    } else {
+      planner.setDestination(picked);
+    }
+  }
+
   Future<void> _pickDepartTime() async {
     final now = DateTime.now();
     final date = await showDatePicker(
@@ -134,8 +171,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           // --- full-bleed map -------------------------------------------
           Positioned.fill(
-            child: IgnorePointer(
-              child: AdaptiveMap(points: mapPoints),
+            child: AdaptiveMap(
+              points: mapPoints,
+              // Tapping the map (as opposed to dragging) picks a point.
+              onMapTap: _onMapTap,
             ),
           ),
 
@@ -187,6 +226,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             onSelected: (p) => ref
                                 .read(plannerProvider.notifier)
                                 .setOrigin(p),
+                            onCleared: () => ref
+                                .read(plannerProvider.notifier)
+                                .setOrigin(null),
                           ),
                           Row(
                             children: [
@@ -208,6 +250,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             onSelected: (p) => ref
                                 .read(plannerProvider.notifier)
                                 .setDestination(p),
+                            onCleared: () => ref
+                                .read(plannerProvider.notifier)
+                                .setDestination(null),
                           ),
                           const SizedBox(height: 8),
                           FilledButton.icon(
@@ -517,13 +562,37 @@ class _LimitSlider extends StatelessWidget {
   }
 }
 
-class _PrayerCard extends ConsumerWidget {
+class _PrayerCard extends ConsumerStatefulWidget {
   const _PrayerCard({this.point});
 
   final GeoPoint? point;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PrayerCard> createState() => _PrayerCardState();
+}
+
+class _PrayerCardState extends ConsumerState<_PrayerCard> {
+  Timer? _ticker;
+  int _rolloverAttempts = 0;
+  String? _lastRolloverDate;
+
+  @override
+  void initState() {
+    super.initState();
+    // Local countdown tick only — the network is never polled from here.
+    _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final settings = ref.watch(settingsProvider);
     final prayers = ref.watch(prayerTimesProvider);
@@ -546,12 +615,13 @@ class _PrayerCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 8),
-            if (point == null)
+            if (widget.point == null)
               Text(l10n.searchFirst,
                   style: Theme.of(context).textTheme.bodyMedium),
-            if (point != null)
+            if (widget.point != null)
               prayers.when(
                 skipLoadingOnRefresh: true,
+                skipLoadingOnReload: true,
                 loading: () => const Center(
                   child: Padding(
                     padding: EdgeInsets.all(16),
@@ -580,9 +650,54 @@ class _PrayerCard extends ConsumerWidget {
                       break;
                     }
                   }
+                  if (next != null) {
+                    _rolloverAttempts = 0;
+                    _lastRolloverDate = null;
+                  } else if (_lastRolloverDate != day.localDate &&
+                      _rolloverAttempts < 2) {
+                    // Every prayer of this local day already passed: ask
+                    // once for the next day so "next prayer" shows a real
+                    // upcoming instant instead of nothing.
+                    _lastRolloverDate = day.localDate;
+                    _rolloverAttempts++;
+                    WidgetsBinding.instance.addPostFrameCallback(
+                        (_) => ref.invalidate(prayerTimesProvider));
+                  }
+                  final cached = day.fetchedAt != null &&
+                      now.difference(day.fetchedAt!.toUtc()).inMinutes > 5;
+                  final locationLabel = day.location.name ??
+                      '${day.location.lat.toStringAsFixed(4)}, '
+                          '${day.location.lon.toStringAsFixed(4)}';
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Where + when + how these times were computed.
+                      Text(
+                        '$locationLabel · ${day.localDate}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${l10n.prayerMethod}: ${settings.prayer.method}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                          if (cached)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.history, size: 14),
+                                const SizedBox(width: 4),
+                                Text(l10n.cachedData,
+                                    style:
+                                        Theme.of(context).textTheme.labelSmall),
+                              ],
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
                       if (next != null)
                         Container(
                           width: double.infinity,

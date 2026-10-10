@@ -492,4 +492,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String providerReport(String prayer, String routing, String mosques) {
     return 'Prière : $prayer · Itinéraire : $routing · Mosquées : $mosques';
   }
+
+  @override
+  String get zoomIn => 'Zoom avant';
+
+  @override
+  String get zoomOut => 'Zoom arrière';
+
+  @override
+  String get clearInput => 'Effacer la saisie';
+
+  @override
+  String get locationDeniedShort =>
+      'Position indisponible — permission refusée ou pas de fixe.';
+
+  @override
+  String get cachedData => 'Copie enregistrée';
+
+  @override
+  String get prayerSourceTitle => 'Source des horaires de prière';
+
+  @override
+  String get prayerSourceAuto =>
+      'Automatique — serveur, ou AlADHAN en direct si hors ligne';
+
+  @override
+  String get prayerSourceBackend => 'Serveur (via le serveur Guide)';
+
+  @override
+  String get prayerSourceAladhan => 'En direct d\'AlADHAN (sans serveur)';
 }

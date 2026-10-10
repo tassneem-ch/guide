@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     routing_provider: str = "osrm"
     mosque_provider: str = "osm"
     geocoding_provider: str = "nominatim"
+    # "auto" (default): Google Places API (New) when a key is configured,
+    # keyless geocoding-based suggestions otherwise. "google" | "nominatim"
+    # pins a backend explicitly.
+    places_provider: str = "auto"
     optimization_provider: str = "internal"
 
     # Credentials

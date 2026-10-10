@@ -204,5 +204,14 @@
       "routing": { "type": "String" },
       "mosques": { "type": "String" }
     }
-  }
+  },
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out",
+  "clearInput": "Clear input",
+  "locationDeniedShort": "Location unavailable — permission denied or no fix.",
+  "cachedData": "Saved copy",
+  "prayerSourceTitle": "Prayer times source",
+  "prayerSourceAuto": "Automatic — backend, or direct AlADHAN if offline",
+  "prayerSourceBackend": "Backend (routes through the Guide server)",
+  "prayerSourceAladhan": "Direct from AlADHAN (no server needed)"
 }

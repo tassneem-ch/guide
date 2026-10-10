@@ -81,6 +81,9 @@ async def put_preferences(
     return {"data": req.data, "stored": True, "anonymous": False}
 
 
+# `/health` is a conventional alias for container/orchestrator probes;
+# the canonical, documented path remains `/v1/health`.
+@health_router.get("/health", include_in_schema=False)
 @health_router.get("/v1/health")
 async def health() -> dict:
     settings = get_settings()

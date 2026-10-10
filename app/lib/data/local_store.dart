@@ -56,11 +56,13 @@ class CacheEnvelope {
 
 /// Key builder that keeps cache entries per request shape.
 String cacheKey(String prefix, Map<String, dynamic> params) {
-  final canonical = jsonEncode(
-    params.map((k, v) => MapEntry(k, v is DateTime ? v.toIso8601String() : v))
-      .entries
+  // Sorted key/value pairs encoded as a JSON object. (Encoding the entries
+  // list itself would throw — MapEntry is not JSON-encodable.)
+  final entries = params.entries
+      .map((e) => MapEntry(
+          e.key, e.value is DateTime ? e.value.toIso8601String() : e.value))
       .toList()
-      ..sort((a, b) => a.key.compareTo(b.key)),
-  );
+    ..sort((a, b) => a.key.compareTo(b.key));
+  final canonical = jsonEncode(Map.fromEntries(entries));
   return '$prefix:${base64Url.encode(utf8.encode(canonical))}';
 }

@@ -981,6 +981,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Prayer: {prayer} · Routing: {routing} · Mosques: {mosques}'**
   String providerReport(String prayer, String routing, String mosques);
+
+  /// No description provided for @zoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get zoomIn;
+
+  /// No description provided for @zoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get zoomOut;
+
+  /// No description provided for @clearInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear input'**
+  String get clearInput;
+
+  /// No description provided for @locationDeniedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Location unavailable — permission denied or no fix.'**
+  String get locationDeniedShort;
+
+  /// No description provided for @cachedData.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved copy'**
+  String get cachedData;
+
+  /// No description provided for @prayerSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer times source'**
+  String get prayerSourceTitle;
+
+  /// No description provided for @prayerSourceAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic — backend, or direct AlADHAN if offline'**
+  String get prayerSourceAuto;
+
+  /// No description provided for @prayerSourceBackend.
+  ///
+  /// In en, this message translates to:
+  /// **'Backend (routes through the Guide server)'**
+  String get prayerSourceBackend;
+
+  /// No description provided for @prayerSourceAladhan.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct from AlADHAN (no server needed)'**
+  String get prayerSourceAladhan;
 }
 
 class _AppLocalizationsDelegate

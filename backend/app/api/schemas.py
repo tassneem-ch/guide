@@ -11,7 +11,10 @@ from ..domain.prayer import PrayerConfig
 
 class PrayerTimesRequest(BaseModel):
     point: GeoPoint
-    date: date
+    # Either a plain local date (used as-is) or a UTC instant, which the
+    # server converts to the location's local calendar date via its IANA
+    # zone — the phone's timezone is never trusted for another location.
+    date: date | datetime
     config: PrayerConfig = Field(default_factory=PrayerConfig)
 
 

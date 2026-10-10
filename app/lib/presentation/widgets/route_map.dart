@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:latlong2/latlong.dart' as lm;
 
@@ -15,13 +18,17 @@ import '../../l10n/generated/app_localizations.dart';
 /// - OpenStreetMap (`flutter_map`, keyless) otherwise - visibly labeled, so
 ///   the user always knows which map engine produced what they see.
 ///
-/// A vendor swap in the future touches this widget only, not the screens.
+/// Both engines are fully interactive (pan, pinch zoom, double-tap zoom,
+/// rotate), carry engine-agnostic zoom + my-location controls, refit the
+/// camera when the plotted points change, and report taps through
+/// [onMapTap] so a point on the map can become an origin or destination.
 class AdaptiveMap extends StatelessWidget {
   const AdaptiveMap({
     super.key,
     required this.points,
     this.stops = const [],
     this.height,
+    this.onMapTap,
   });
 
   /// Ordered points forming the polyline (a line is drawn from 2+ points).
@@ -33,13 +40,16 @@ class AdaptiveMap extends StatelessWidget {
   /// Fixed height; when null the map fills its parent.
   final double? height;
 
+  /// Tap on the map (not drag) → coordinates picked by the user.
+  final ValueChanged<GeoPoint>? onMapTap;
+
   @override
   Widget build(BuildContext context) {
     Widget map;
     if (useGoogleMaps) {
-      map = _GoogleMapSurface(points: points, stops: stops);
+      map = _GoogleMapSurface(points: points, stops: stops, onMapTap: onMapTap);
     } else {
-      map = _OsmMapSurface(points: points, stops: stops);
+      map = _OsmMapSurface(points: points, stops: stops, onMapTap: onMapTap);
     }
     if (height != null) {
       map = SizedBox(height: height, child: map);
@@ -49,14 +59,88 @@ class AdaptiveMap extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Shared overlay controls + permission-aware "my location"
+// ---------------------------------------------------------------------------
+
+/// Resolve the device position, asking for permission only on demand.
+/// Returns null when denied or unavailable (callers show the denial hint).
+Future<GeoPoint?> _devicePosition(BuildContext context) async {
+  try {
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return null;
+    }
+    final position = await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+    );
+    return GeoPoint(lat: position.latitude, lon: position.longitude);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Zoom in / zoom out / my-location controls that sit above either engine.
+class _MapControls extends StatelessWidget {
+  const _MapControls({
+    required this.onZoomIn,
+    required this.onZoomOut,
+    required this.onMyLocation,
+  });
+
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback onMyLocation;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    Widget button(String tooltip, IconData icon, VoidCallback onPressed) =>
+        Material(
+          color: Theme.of(context)
+              .colorScheme
+              .surface
+              .withValues(alpha: 0.92),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
+          child: IconButton(
+            tooltip: tooltip,
+            iconSize: 20,
+            icon: Icon(icon),
+            onPressed: onPressed,
+          ),
+        );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        button(l10n.zoomIn, Icons.add, onZoomIn),
+        const SizedBox(height: 6),
+        button(l10n.zoomOut, Icons.remove, onZoomOut),
+        const SizedBox(height: 10),
+        button(l10n.useMyLocation, Icons.my_location, onMyLocation),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Google Maps engine
 // ---------------------------------------------------------------------------
 
 class _GoogleMapSurface extends StatefulWidget {
-  const _GoogleMapSurface({required this.points, required this.stops});
+  const _GoogleMapSurface({
+    required this.points,
+    required this.stops,
+    this.onMapTap,
+  });
 
   final List<GeoPoint> points;
   final List<ScheduledStop> stops;
+  final ValueChanged<GeoPoint>? onMapTap;
 
   @override
   State<_GoogleMapSurface> createState() => _GoogleMapSurfaceState();
@@ -67,10 +151,70 @@ class _GoogleMapSurfaceState extends State<_GoogleMapSurface> {
 
   static gm.LatLng _ll(GeoPoint p) => gm.LatLng(p.lat, p.lon);
 
+  static bool _samePoints(List<GeoPoint> a, List<GeoPoint> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].lat != b[i].lat || a[i].lon != b[i].lon) return false;
+    }
+    return true;
+  }
+
   @override
   void dispose() {
     _controller?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant _GoogleMapSurface old) {
+    super.didUpdateWidget(old);
+    if (!_samePoints(old.points, widget.points)) {
+      // Only an actual point change moves the camera — marker updates or
+      // unrelated rebuilds never yank the view around.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fitToPoints());
+    }
+  }
+
+  Future<void> _fitToPoints() async {
+    final controller = _controller;
+    if (controller == null) return;
+    final points = widget.points.map(_ll).toList();
+    if (points.isEmpty) return;
+    try {
+      if (points.length >= 2) {
+        final mosqueStops =
+            widget.stops.where((s) => s.kind == StopKind.mosque).toList();
+        await controller.animateCamera(
+          gm.CameraUpdate.newLatLngBounds(_bounds(points, mosqueStops), 72),
+        );
+      } else {
+        await controller.animateCamera(
+            gm.CameraUpdate.newLatLngZoom(points.first, 12));
+      }
+    } catch (_) {
+      // Bounds animation unsupported on some platforms - camera stays put.
+    }
+  }
+
+  Future<void> _goToMyLocation() async {
+    final position = await _devicePosition(context);
+    if (position == null || !mounted) {
+      _showDeniedHint();
+      return;
+    }
+    await _controller?.animateCamera(gm.CameraUpdate.newLatLngZoom(
+      gm.LatLng(position.lat, position.lon),
+      13,
+    ));
+  }
+
+  void _showDeniedHint() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content:
+              Text(AppLocalizations.of(context).locationDeniedShort)),
+    );
   }
 
   @override
@@ -104,29 +248,57 @@ class _GoogleMapSurfaceState extends State<_GoogleMapSurface> {
         ),
     };
 
-    return gm.GoogleMap(
-      initialCameraPosition: _initialCamera(points),
-      polylines: points.length >= 2
-          ? {
-              gm.Polyline(
-                polylineId: const gm.PolylineId('route'),
-                points: points,
-                width: 5,
-                color: Colors.teal,
-              ),
+    return Stack(
+      children: [
+        gm.GoogleMap(
+          initialCameraPosition: _initialCamera(points),
+          polylines: points.length >= 2
+              ? {
+                  gm.Polyline(
+                    polylineId: const gm.PolylineId('route'),
+                    points: points,
+                    width: 5,
+                    color: Colors.teal,
+                  ),
+                }
+              : const {},
+          markers: markers,
+          // Explicit interactive-map configuration (never Lite/static mode).
+          scrollGesturesEnabled: true,
+          zoomGesturesEnabled: true,
+          rotateGesturesEnabled: true,
+          tiltGesturesEnabled: true,
+          zoomControlsEnabled: false, // replaced by engine-agnostic controls
+          mapToolbarEnabled: false,
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false, // replaced by engine-agnostic control
+          // Claim gestures inside the platform view even while a draggable
+          // sheet or card floats over parts of the map.
+          gestureRecognizers: const {
+            Factory<OneSequenceGestureRecognizer>(EagerGestureRecognizer.new),
+          },
+          onMapCreated: (controller) {
+            _controller = controller;
+            if (points.length >= 2) {
+              _fitToPoints();
             }
-          : const {},
-      markers: markers,
-      myLocationEnabled: true,
-      myLocationButtonEnabled: true,
-      zoomControlsEnabled: false,
-      mapToolbarEnabled: false,
-      onMapCreated: (controller) {
-        _controller = controller;
-        if (points.length >= 2) {
-          _fitBounds(controller, points, mosqueStops);
-        }
-      },
+          },
+          onTap: (latLng) => widget.onMapTap
+              ?.call(GeoPoint(lat: latLng.latitude, lon: latLng.longitude)),
+        ),
+        Positioned(
+          right: 12,
+          bottom: 96,
+          child: SafeArea(
+            child: _MapControls(
+              onZoomIn: () => _controller?.animateCamera(gm.CameraUpdate.zoomIn()),
+              onZoomOut: () =>
+                  _controller?.animateCamera(gm.CameraUpdate.zoomOut()),
+              onMyLocation: _goToMyLocation,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -166,34 +338,104 @@ class _GoogleMapSurfaceState extends State<_GoogleMapSurface> {
         southwest: gm.LatLng(south, west),
         northeast: gm.LatLng(north, east));
   }
-
-  Future<void> _fitBounds(gm.GoogleMapController controller,
-      List<gm.LatLng> points, List<ScheduledStop> stops) async {
-    try {
-      await controller.animateCamera(
-        gm.CameraUpdate.newLatLngBounds(_bounds(points, stops), 72),
-      );
-    } catch (_) {
-      // Bounds animation unsupported on some platforms - initial camera stays.
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------
 // OpenStreetMap fallback engine (keyless)
 // ---------------------------------------------------------------------------
 
-class _OsmMapSurface extends StatelessWidget {
-  const _OsmMapSurface({required this.points, required this.stops});
+class _OsmMapSurface extends StatefulWidget {
+  const _OsmMapSurface({
+    required this.points,
+    required this.stops,
+    this.onMapTap,
+  });
 
   final List<GeoPoint> points;
   final List<ScheduledStop> stops;
+  final ValueChanged<GeoPoint>? onMapTap;
+
+  @override
+  State<_OsmMapSurface> createState() => _OsmMapSurfaceState();
+}
+
+class _OsmMapSurfaceState extends State<_OsmMapSurface> {
+  final MapController _mapController = MapController();
+
+  static bool _samePoints(List<GeoPoint> a, List<GeoPoint> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].lat != b[i].lat || a[i].lon != b[i].lon) return false;
+    }
+    return true;
+  }
+
+  @override
+  void didUpdateWidget(covariant _OsmMapSurface old) {
+    super.didUpdateWidget(old);
+    if (!_samePoints(old.points, widget.points)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fitToPoints());
+    }
+  }
+
+  void _fitToPoints() {
+    final lmPoints = widget.points.map(_toLm).toList();
+    if (lmPoints.isEmpty) return;
+    try {
+      if (lmPoints.length >= 2) {
+        final mosqueStops = widget.stops
+            .where((s) => s.kind == StopKind.mosque)
+            .map((s) => _toLm(s.location))
+            .toList();
+        _mapController.fitCamera(CameraFit.bounds(
+          bounds: LatLngBounds.fromPoints([...lmPoints, ...mosqueStops]),
+          padding: const EdgeInsets.all(56),
+        ));
+      } else {
+        _mapController.move(lmPoints.first, 12);
+      }
+    } catch (_) {
+      // Map not attached yet — the initial camera fit still applies.
+    }
+  }
+
+  static lm.LatLng _toLm(GeoPoint p) => lm.LatLng(p.lat, p.lon);
+
+  void _zoom(double delta) {
+    try {
+      final camera = _mapController.camera;
+      _mapController.move(
+          camera.center, (camera.zoom + delta).clamp(2.0, 19.0));
+    } catch (_) {
+      // Map not ready — ignore.
+    }
+  }
+
+  Future<void> _goToMyLocation() async {
+    final position = await _devicePosition(context);
+    if (position == null || !mounted) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context).locationDeniedShort)),
+      );
+      return;
+    }
+    try {
+      final zoom = _mapController.camera.zoom;
+      _mapController.move(_toLm(position), zoom < 13 ? 13 : zoom);
+    } catch (_) {
+      // Map not ready — ignore.
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final lmPoints = points.map((p) => lm.LatLng(p.lat, p.lon)).toList();
-    final mosqueStops = stops.where((s) => s.kind == StopKind.mosque).toList();
+    final lmPoints = widget.points.map(_toLm).toList();
+    final mosqueStops =
+        widget.stops.where((s) => s.kind == StopKind.mosque).toList();
 
     lm.LatLng center;
     double zoom;
@@ -216,6 +458,7 @@ class _OsmMapSurface extends StatelessWidget {
     return Stack(
       children: [
         FlutterMap(
+          mapController: _mapController,
           options: MapOptions(
             initialCenter: center,
             initialZoom: zoom,
@@ -223,16 +466,16 @@ class _OsmMapSurface extends StatelessWidget {
                 ? CameraFit.bounds(
                     bounds: LatLngBounds.fromPoints([
                       ...lmPoints,
-                      for (final s in mosqueStops)
-                        lm.LatLng(s.location.lat, s.location.lon),
+                      for (final s in mosqueStops) _toLm(s.location),
                     ]),
                     padding: const EdgeInsets.all(56),
                   )
                 : null,
-            interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.pinchZoom |
-                    InteractiveFlag.drag |
-                    InteractiveFlag.doubleTapZoom),
+            // Fully interactive: pan, pinch, rotate, double-tap, wheel.
+            interactionOptions:
+                const InteractionOptions(flags: InteractiveFlag.all),
+            onTap: (tapPosition, point) => widget.onMapTap?.call(
+                GeoPoint(lat: point.latitude, lon: point.longitude)),
           ),
           children: [
             TileLayer(
@@ -265,7 +508,7 @@ class _OsmMapSurface extends StatelessWidget {
                   ),
                 for (final s in mosqueStops)
                   Marker(
-                    point: lm.LatLng(s.location.lat, s.location.lon),
+                    point: _toLm(s.location),
                     width: 36,
                     height: 36,
                     child: Tooltip(
@@ -299,6 +542,17 @@ class _OsmMapSurface extends StatelessWidget {
                       style: Theme.of(context).textTheme.labelSmall),
                 ],
               ),
+            ),
+          ),
+        ),
+        Positioned(
+          right: 12,
+          bottom: 72,
+          child: SafeArea(
+            child: _MapControls(
+              onZoomIn: () => _zoom(1),
+              onZoomOut: () => _zoom(-1),
+              onMyLocation: _goToMyLocation,
             ),
           ),
         ),

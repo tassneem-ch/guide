@@ -204,5 +204,14 @@
       "routing": { "type": "String" },
       "mosques": { "type": "String" }
     }
-  }
+  },
+  "zoomIn": "تكبير",
+  "zoomOut": "تصغير",
+  "clearInput": "مسح الإدخال",
+  "locationDeniedShort": "الموقع غير متاح — الإذن مرفوض أو لا يوجد تحديد.",
+  "cachedData": "نسخة محفوظة",
+  "prayerSourceTitle": "مصدر مواقيت الصلاة",
+  "prayerSourceAuto": "تلقائي — الخادم، أو AlADHAN مباشرة عند الانقطاع",
+  "prayerSourceBackend": "الخادم (عبر خادم Guide)",
+  "prayerSourceAladhan": "مباشرة من AlADHAN (بدون خادم)"
 }

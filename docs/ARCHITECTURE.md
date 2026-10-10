@@ -116,7 +116,10 @@ is reported as `no_data` ≠ `no_mosques`.
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /v1/prayer-times` | prayer times for a point/date/method/school/high-lat rules |
+| `POST /v1/prayer-times` | prayer times for a point/date/method/school/high-lat rules (accepts a UTC instant or a local date) |
+| `GET /v1/prayer-times/capabilities` | what the active prayer provider supports |
+| `GET /v1/places/autocomplete` | place suggestions (Google Places (New) with a key, keyless otherwise) |
+| `GET /v1/places/details` | resolve a selected suggestion to coordinates |
 | `POST /v1/routes/alternatives` | fastest / prayer-friendly / balanced route plans |
 | `POST /v1/mosques/search` | mosque candidates near a point or polyline |
 | `POST /v1/optimize` | re-run stop selection for edited constraints |

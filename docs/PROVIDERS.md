@@ -12,6 +12,7 @@ Default (keyless) development stack:
 | Routing    | OSRM (public)   | no         | yes (fair-use) |
 | Mosques    | OSM Overpass    | no         | yes (fair-use) |
 | Geocoding  | Nominatim       | no         | yes (policy-bound) |
+| Places (autocomplete) | Nominatim suggestions | no | yes (policy-bound) |
 | Optimization | internal DP solver | no     | yes         |
 
 Any provider can be switched to `fixture` (`PRAYER_PROVIDER=fixture`, ...)
@@ -21,11 +22,21 @@ for offline development. Fixture responses are always marked
 ## Prayer times — AlAdhan (`prayer_aladhan`)
 
 - Free, no API key.
-- Supports calculation methods (MWL, Umm al-Qura, ISNA, Egyptian, Karachi,
-  ...) and schools (standard/hanafi); high-latitude rules and manual
-  adjustments are applied by our backend on top of raw event times.
-- Capabilities are exposed via `/v1/prayers/capabilities` — the app only
+- Supports the calculation methods the API's catalog exposes (verified
+  against `GET /v1/methods`): 22 methods including Tunisia, France, Dubai,
+  JAKIM, KEMENAG, Algeria, Morocco, Jordan, Portugal — not just the classic
+  13 — plus schools (standard/hanafi) and per-prayer `tune` adjustments;
+  high-latitude rule selection is not offered by this provider, so the app
+  hides that control based on capabilities() rather than silently ignoring
+  it. Method ids sent to the API are **numeric** (string ids silently fall
+  back to ISNA upstream).
+- Capabilities are exposed via `/v1/prayer-times/capabilities` — the app only
   offers settings the active provider supports.
+- The app can also call AlAdhan **directly** (keyless, so no credential
+  ships to the client) as a fallback when the backend is unreachable or when
+  Settings → "Prayer times source" pins it; both paths parse the same
+  ISO-8601 timings and resolve the location's local calendar day from the
+  response's own UTC offset (never the phone's timezone).
 - **Limitations**: no formal published SLA/quota; treat as best-effort and
   keep the `fixture` provider for tests. iqama/congregation times are not
   published by AlAdhan — the app never invents them.
@@ -79,6 +90,23 @@ for offline development. Fixture responses are always marked
   `User-Agent`, no bulk queries, caching encouraged. For production use,
   host your own Nominatim instance.
 - Coverage/quality varies; results are returned as-is with their source.
+
+## Place suggestions — Google Places API (New) (`places_google`)
+
+- Endpoint pair: `GET /v1/places/autocomplete` (typing) and
+  `GET /v1/places/details` (resolve the selected prediction).
+- Used automatically when `GOOGLE_MAPS_API_KEY` is set and Places API (New)
+  is enabled for that key; `PLACES_PROVIDER=auto|google|nominatim` pins it.
+- The key stays server-side; the app only sees normalized
+  `{id, label}` predictions and requests coordinates through
+  `/v1/places/details` on selection.
+- Session tokens are generated **by the app** per search session and passed
+  through, so Google bills typing + selection as one Autocomplete session.
+- Optional `bias_lat`/`bias_lon` are a soft `locationBias`, never a
+  restriction (international results are not cut off).
+- With no key, the configured geocoding provider answers the same endpoint
+  with already-resolved points (`requires_details: false`) — the keyless,
+  live-working default.
 
 ## Optimization — internal solver (`optimize_google` is experimental)
 

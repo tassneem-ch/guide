@@ -489,4 +489,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String providerReport(String prayer, String routing, String mosques) {
     return 'Prayer: $prayer · Routing: $routing · Mosques: $mosques';
   }
+
+  @override
+  String get zoomIn => 'Zoom in';
+
+  @override
+  String get zoomOut => 'Zoom out';
+
+  @override
+  String get clearInput => 'Clear input';
+
+  @override
+  String get locationDeniedShort =>
+      'Location unavailable — permission denied or no fix.';
+
+  @override
+  String get cachedData => 'Saved copy';
+
+  @override
+  String get prayerSourceTitle => 'Prayer times source';
+
+  @override
+  String get prayerSourceAuto =>
+      'Automatic — backend, or direct AlADHAN if offline';
+
+  @override
+  String get prayerSourceBackend => 'Backend (routes through the Guide server)';
+
+  @override
+  String get prayerSourceAladhan => 'Direct from AlADHAN (no server needed)';
 }

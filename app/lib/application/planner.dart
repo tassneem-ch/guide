@@ -119,7 +119,17 @@ final routeProvider =
 // Prayer times for the home card
 // ---------------------------------------------------------------------------
 
+/// The current UTC calendar day, re-emitted only when it actually changes.
+/// Watching this makes prayer data refetch across midnight (one request per
+/// day change — never a per-second poll; the countdown itself is local).
+final prayerDayTickerProvider = StreamProvider<String>((ref) async* {
+  String dayKey() => DateTime.now().toUtc().toIso8601String().substring(0, 10);
+  yield dayKey();
+  yield* Stream.periodic(const Duration(seconds: 30), (_) => dayKey()).distinct();
+});
+
 final prayerTimesProvider = FutureProvider<DayPrayers>((ref) async {
+  ref.watch(prayerDayTickerProvider); // refetch when the day changes
   final form = ref.watch(plannerProvider);
   final settings = ref.watch(settingsProvider);
   final point = form.origin ?? form.destination;

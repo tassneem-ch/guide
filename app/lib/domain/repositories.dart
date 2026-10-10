@@ -25,7 +25,23 @@ enum FailureKind { network, server, cache, validation, unknown }
 
 /// Geocoding: resolve free text to coordinates (no invented results).
 abstract interface class GeocodeRepository {
+  /// Compat path: full text → resolved coordinates.
   Future<List<GeoPoint>> geocode(String query);
+
+  /// Autocomplete suggestions for [query]. [sessionToken] groups one typing
+  /// session (passed through for Google session billing); [bias] is a soft
+  /// location preference, never a restriction.
+  Future<List<PlaceSuggestion>> suggest(
+    String query, {
+    String? sessionToken,
+    GeoPoint? bias,
+  });
+
+  /// Resolve a selected suggestion to real coordinates + formatted address.
+  Future<GeoPoint> resolveSuggestion(
+    PlaceSuggestion suggestion, {
+    String? sessionToken,
+  });
 }
 
 /// Prayer times for a given day at a given point.

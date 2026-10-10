@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/aladhan_prayer_repository.dart';
+import '../data/aladhan_service.dart';
 import '../data/api_client.dart';
 import '../data/api_repositories.dart';
+import '../data/fallback_prayer_repository.dart';
 import '../data/mock_repositories.dart';
 import '../domain/models.dart';
 import '../domain/repositories.dart';
@@ -32,6 +35,7 @@ class AppSettings {
     this.preference = RoutePreference.balanced,
     this.prayerStopReminders = false,
     this.backendUrl = kDefaultBackendUrl,
+    this.prayerSource = 'auto',
     this.demoMode = false,
   });
 
@@ -48,6 +52,7 @@ class AppSettings {
   final RoutePreference preference;
   final bool prayerStopReminders;
   final String backendUrl;
+  final String prayerSource; // auto | backend | aladhan (direct)
   final bool demoMode;
 
   Locale? get locale => localeCode == 'system' ? null : Locale(localeCode);
@@ -75,6 +80,7 @@ class AppSettings {
     RoutePreference? preference,
     bool? prayerStopReminders,
     String? backendUrl,
+    String? prayerSource,
     bool? demoMode,
   }) =>
       AppSettings(
@@ -91,6 +97,7 @@ class AppSettings {
         preference: preference ?? this.preference,
         prayerStopReminders: prayerStopReminders ?? this.prayerStopReminders,
         backendUrl: backendUrl ?? this.backendUrl,
+        prayerSource: prayerSource ?? this.prayerSource,
         demoMode: demoMode ?? this.demoMode,
       );
 
@@ -108,6 +115,7 @@ class AppSettings {
         'preference': routePreferenceTo(preference),
         'prayerStopReminders': prayerStopReminders,
         'backendUrl': backendUrl,
+        'prayerSource': prayerSource,
         'demoMode': demoMode,
       };
 
@@ -140,6 +148,7 @@ class AppSettings {
       preference: routePreferenceFrom(json['preference'] as String? ?? 'balanced'),
       prayerStopReminders: json['prayerStopReminders'] as bool? ?? false,
       backendUrl: json['backendUrl'] as String? ?? kDefaultBackendUrl,
+      prayerSource: json['prayerSource'] as String? ?? 'auto',
       demoMode: json['demoMode'] as bool? ?? false,
     );
   }
@@ -178,6 +187,8 @@ class SettingsController extends Notifier<AppSettings> {
   void setMetric(bool v) => update((s) => s.copyWith(metric: v));
   void setDemoMode(bool v) => update((s) => s.copyWith(demoMode: v));
   void setBackendUrl(String url) => update((s) => s.copyWith(backendUrl: url));
+  void setPrayerSource(String source) =>
+      update((s) => s.copyWith(prayerSource: source));
   void setPrayerStopReminders(bool v) =>
       update((s) => s.copyWith(prayerStopReminders: v));
 
@@ -277,9 +288,22 @@ final repositoriesProvider = Provider<Repositories>((ref) {
   }
   final api = ref.watch(guideApiProvider);
   final store = ref.watch(localStoreProvider);
+  final prayerSource =
+      ref.watch(settingsProvider.select((s) => s.prayerSource));
+  // Prayer source: 'backend' (proxy), 'aladhan' (direct, keyless), or
+  // 'auto' — backend first with direct AlAdhan as a network-failure
+  // fallback, so prayer times keep working even when the backend is down.
+  final PrayerRepository prayerRepo = switch (prayerSource) {
+    'backend' => ApiPrayerRepository(api, store),
+    'aladhan' => AladhanPrayerRepository(AladhanService(), store),
+    _ => FallbackPrayerRepository(
+        primary: ApiPrayerRepository(api, store),
+        fallback: AladhanPrayerRepository(AladhanService(), store),
+      ),
+  };
   return Repositories(
     geocode: ApiGeocodeRepository(api, store),
-    prayer: ApiPrayerRepository(api, store),
+    prayer: prayerRepo,
     route: ApiRouteRepository(api, store),
     trip: ApiTripRepository(api, store),
     fixtureMode: false,

@@ -204,5 +204,14 @@
       "routing": { "type": "String" },
       "mosques": { "type": "String" }
     }
-  }
+  },
+  "zoomIn": "Zoom avant",
+  "zoomOut": "Zoom arrière",
+  "clearInput": "Effacer la saisie",
+  "locationDeniedShort": "Position indisponible — permission refusée ou pas de fixe.",
+  "cachedData": "Copie enregistrée",
+  "prayerSourceTitle": "Source des horaires de prière",
+  "prayerSourceAuto": "Automatique — serveur, ou AlADHAN en direct si hors ligne",
+  "prayerSourceBackend": "Serveur (via le serveur Guide)",
+  "prayerSourceAladhan": "En direct d'AlADHAN (sans serveur)"
 }

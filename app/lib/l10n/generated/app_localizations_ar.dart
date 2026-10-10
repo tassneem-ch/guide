@@ -486,4 +486,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String providerReport(String prayer, String routing, String mosques) {
     return 'الصلاة: $prayer · المسار: $routing · المساجد: $mosques';
   }
+
+  @override
+  String get zoomIn => 'تكبير';
+
+  @override
+  String get zoomOut => 'تصغير';
+
+  @override
+  String get clearInput => 'مسح الإدخال';
+
+  @override
+  String get locationDeniedShort =>
+      'الموقع غير متاح — الإذن مرفوض أو لا يوجد تحديد.';
+
+  @override
+  String get cachedData => 'نسخة محفوظة';
+
+  @override
+  String get prayerSourceTitle => 'مصدر مواقيت الصلاة';
+
+  @override
+  String get prayerSourceAuto =>
+      'تلقائي — الخادم، أو AlADHAN مباشرة عند الانقطاع';
+
+  @override
+  String get prayerSourceBackend => 'الخادم (عبر خادم Guide)';
+
+  @override
+  String get prayerSourceAladhan => 'مباشرة من AlADHAN (بدون خادم)';
 }

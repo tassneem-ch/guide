@@ -22,6 +22,7 @@ from .mosques_fixture import FixtureMosqueProvider
 from .mosques_google import GoogleMosqueProvider
 from .mosques_osm import OsmMosqueProvider
 from .optimize_google import GoogleRouteOptimizationProvider
+from .places_google import GooglePlacesProvider
 from .prayer_aladhan import METHOD_LABELS, AladhanPrayerProvider
 from .prayer_fixture import FixturePrayerProvider
 from .routing_fixture import FixtureRoutingProvider
@@ -41,6 +42,13 @@ class ProviderBundle:
         self.mosques: MosqueProvider = _make_mosques(settings)
         self.geocoding: GeocodingProvider = _make_geocoding(settings)
         self.optimization: OptimizationProvider | None = _make_optimization(settings)
+        # Places (New) autocomplete: only when a Google key is configured and
+        # the operator has not pinned the keyless provider.
+        self.places: GooglePlacesProvider | None = (
+            GooglePlacesProvider()
+            if settings.google_maps_api_key and settings.places_provider != "nominatim"
+            else None
+        )
 
     def report(self) -> dict[str, str]:
         """Provider modes for /v1/health — makes fixture mode visible."""
@@ -56,11 +64,16 @@ class ProviderBundle:
             "mosques": label(self.mosques, "mosques"),
             "geocoding": label(self.geocoding, "geocoding"),
             "optimization": label(self.optimization, "optimization"),
+            "places": (
+                label(self.places, "places")
+                if self.places is not None
+                else f"{self.geocoding.name} suggestions (live)"
+            ),
         }
 
     async def close(self) -> None:
         for provider in (self.prayer, self.routing, self.mosques,
-                         self.geocoding, self.optimization):
+                         self.geocoding, self.optimization, self.places):
             if provider is not None:
                 await provider.close()
 

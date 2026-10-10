@@ -27,7 +27,10 @@ from ..domain.prayer import (
     PrayerName,
 )
 
-# Our method enum -> AlAdhan numeric method id (only documented ids).
+# Our method enum -> AlAdhan numeric method id. Ids verified against the
+# provider's own catalog: GET https://api.aladhan.com/v1/methods (the API's
+# string ids silently fall back to ISNA in the timings endpoint, so numeric
+# ids are the only correct interface here).
 ALADHAN_METHOD_IDS: dict[PrayerMethod, int] = {
     PrayerMethod.MWL: 3,
     PrayerMethod.ISNA: 2,
@@ -39,9 +42,18 @@ ALADHAN_METHOD_IDS: dict[PrayerMethod, int] = {
     PrayerMethod.KUWAIT: 9,
     PrayerMethod.QATAR: 10,
     PrayerMethod.SINGAPORE: 11,
+    PrayerMethod.FRANCE: 12,
     PrayerMethod.TURKEY: 13,
     PrayerMethod.RUSSIA: 14,
     PrayerMethod.MOON_SIGHTING_COMMITTEE: 15,
+    PrayerMethod.DUBAI: 16,
+    PrayerMethod.JAKIM: 17,
+    PrayerMethod.TUNISIA: 18,
+    PrayerMethod.ALGERIA: 19,
+    PrayerMethod.KEMENAG: 20,
+    PrayerMethod.MOROCCO: 21,
+    PrayerMethod.PORTUGAL: 22,
+    PrayerMethod.JORDAN: 23,
 }
 
 METHOD_LABELS: dict[PrayerMethod, str] = {
@@ -55,10 +67,18 @@ METHOD_LABELS: dict[PrayerMethod, str] = {
     PrayerMethod.KUWAIT: "Kuwait",
     PrayerMethod.QATAR: "Qatar",
     PrayerMethod.SINGAPORE: "Majlis Ugama Islam Singapura",
+    PrayerMethod.FRANCE: "Union des Organisations Islamiques de France",
     PrayerMethod.TURKEY: "Diyanet Isleri Baskanligi, Turkey",
     PrayerMethod.RUSSIA: "Spiritual Administration of Muslims of Russia",
     PrayerMethod.MOON_SIGHTING_COMMITTEE: "Moonsighting Committee Worldwide",
-    PrayerMethod.FRANCE: "Comite Islam de France",
+    PrayerMethod.DUBAI: "Dubai",
+    PrayerMethod.JAKIM: "Jabatan Kemajuan Islam Malaysia (JAKIM)",
+    PrayerMethod.TUNISIA: "Tunisia",
+    PrayerMethod.ALGERIA: "Algeria",
+    PrayerMethod.KEMENAG: "Kementerian Agama Republik Indonesia",
+    PrayerMethod.MOROCCO: "Morocco",
+    PrayerMethod.PORTUGAL: "Comunidade Islamica de Lisboa",
+    PrayerMethod.JORDAN: "Ministry of Awqaf, Islamic Affairs and Holy Places, Jordan",
     PrayerMethod.CUSTOM: "Custom (manual adjustments)",
 }
 

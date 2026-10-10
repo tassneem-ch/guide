@@ -34,6 +34,20 @@ class GeoPoint {
   String toString() => 'GeoPoint($lat, $lon)';
 }
 
+/// One autocomplete suggestion.
+///
+/// Either [point] is already resolved (keyless provider path), or only [id]
+/// is present and the suggestion must be resolved through
+/// `GeocodeRepository.resolveSuggestion` before its coordinates can be used.
+/// A suggestion without [point] is never treated as a location.
+class PlaceSuggestion {
+  const PlaceSuggestion({required this.label, this.id, this.point});
+
+  final String? id;
+  final String label;
+  final GeoPoint? point;
+}
+
 // ---------------------------------------------------------------------------
 // Prayer
 // ---------------------------------------------------------------------------
@@ -85,6 +99,22 @@ class PrayerEvent {
         congregationVerified: json['congregation_verified'] as bool? ?? false,
         notes: (json['notes'] as List?)?.cast<String>() ?? const [],
       );
+
+  /// Wire format matching [PrayerEvent.fromJson] (used for response caching).
+  Map<String, dynamic> toJson() => {
+        'name': name.name,
+        'utc': utc.toUtc().toIso8601String(),
+        'local': local.toIso8601String(),
+        'tz': tz,
+        'local_date': localDate,
+        'method': method,
+        'school': school,
+        'source': source,
+        'live': live,
+        'congregation_utc': congregationUtc?.toUtc().toIso8601String(),
+        'congregation_verified': congregationVerified,
+        'notes': notes,
+      };
 }
 
 class DayPrayers {
@@ -119,6 +149,17 @@ class DayPrayers {
             ? null
             : DateTime.tryParse(json['fetched_at'] as String),
       );
+
+  /// Wire format matching [DayPrayers.fromJson] (used for response caching).
+  Map<String, dynamic> toJson() => {
+        'location': location.toJson(),
+        'local_date': localDate,
+        'tz': tz,
+        'events': events.map((e) => e.toJson()).toList(),
+        'source': source,
+        'live': live,
+        'fetched_at': fetchedAt?.toUtc().toIso8601String(),
+      };
 }
 
 class MethodOption {

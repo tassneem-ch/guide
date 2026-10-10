@@ -31,6 +31,30 @@ class MockGeocodeRepository implements GeocodeRepository {
         .where((c) => (c.name ?? '').toLowerCase().contains(q))
         .toList();
   }
+
+  @override
+  Future<List<PlaceSuggestion>> suggest(
+    String query, {
+    String? sessionToken,
+    GeoPoint? bias,
+  }) async =>
+      [
+        for (final point in await geocode(query))
+          PlaceSuggestion(label: point.name ?? '', point: point),
+      ];
+
+  @override
+  Future<GeoPoint> resolveSuggestion(
+    PlaceSuggestion suggestion, {
+    String? sessionToken,
+  }) async {
+    final point = suggestion.point;
+    if (point == null) {
+      throw Failure('Fixture suggestion has no coordinates',
+          kind: FailureKind.validation);
+    }
+    return point;
+  }
 }
 
 class MockPrayerRepository implements PrayerRepository {
