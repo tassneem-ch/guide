@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../application/planner.dart';
 import '../../application/settings.dart';
 import '../../core/format.dart';
+import '../../core/map_engine.dart';
 import '../../domain/models.dart';
 import '../../domain/repositories.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -30,6 +31,30 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _planning = false;
+
+  /// Drives the map controls: they sit just above the sheet wherever the
+  /// user has dragged it, so they are never buried underneath it.
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
+  double _sheetExtent = 0.42; // == initialChildSize
+
+  @override
+  void initState() {
+    super.initState();
+    _sheetController.addListener(() {
+      if (!mounted || !_sheetController.isAttached) return;
+      final size = _sheetController.size;
+      if ((size - _sheetExtent).abs() > 0.01) {
+        setState(() => _sheetExtent = size);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _sheetController.dispose();
+    super.dispose();
+  }
 
   Future<void> _plan() async {
     final form = ref.read(plannerProvider);
@@ -175,6 +200,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               points: mapPoints,
               // Tapping the map (as opposed to dragging) picks a point.
               onMapTap: _onMapTap,
+              // Keep the zoom/my-location controls above the sheet, no
+              // matter where the user has dragged it.
+              controlsBottomInset: (MediaQuery.sizeOf(context).height -
+                      MediaQuery.viewInsetsOf(context).bottom) *
+                  _sheetExtent +
+                  12,
             ),
           ),
 
@@ -218,6 +249,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             ],
                           ),
+                          // The map's own engine label sits behind this
+                          // card, so disclose it here as well.
+                          if (!useGoogleMaps)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.map_outlined, size: 14),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.mapFallbackNote,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           const SizedBox(height: 4),
                           PlaceField(
                             label: l10n.fromLabel,
@@ -278,6 +329,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           // --- draggable details sheet ------------------------------------
           DraggableScrollableSheet(
+            controller: _sheetController,
             initialChildSize: 0.42,
             minChildSize: 0.12,
             maxChildSize: 0.92,

@@ -46,8 +46,13 @@ class PlaceField extends ConsumerStatefulWidget {
 }
 
 class _PlaceFieldState extends ConsumerState<PlaceField> {
+  /// What the field shows for a point: its name when it has one, otherwise
+  /// the raw coordinates (honest — the planner really holds that point).
+  static String _textFor(GeoPoint? point) =>
+      point == null ? '' : (point.name ?? '${point.lat}, ${point.lon}');
+
   late final TextEditingController _controller =
-      TextEditingController(text: widget.initial?.name ?? '');
+      TextEditingController(text: _textFor(widget.initial));
   Timer? _debounce;
   List<PlaceSuggestion> _suggestions = const [];
   bool _loading = false;
@@ -55,6 +60,16 @@ class _PlaceFieldState extends ConsumerState<PlaceField> {
 
   int _seq = 0; // monotonic: responses with a stale sequence are dropped
   PlaceSuggestion? _selected;
+
+  /// The point this field most recently handed to [PlaceField.onSelected].
+  /// Its echo back through [PlaceField.initial] is OUR change, not an
+  /// external one — the label and selection state must survive it.
+  GeoPoint? _lastEmitted;
+
+  /// Whether a real search for the current text completed (its result may
+  /// have been empty). Only then is "No results" a truthful statement.
+  bool _searched = false;
+
   late String _session = _newSession();
   GeoPoint? _bias;
   bool _biasTried = false;
@@ -73,13 +88,24 @@ class _PlaceFieldState extends ConsumerState<PlaceField> {
     final changed = next == null
         ? prev != null
         : (prev == null || prev.lat != next.lat || prev.lon != next.lon);
-    // Reflect an externally changed selection (map tap, swap, my-location).
-    // When the selection became null, keep whatever the user is typing.
     if (changed && next != null) {
-      _controller.text = next.name ?? '${next.lat}, ${next.lon}';
+      // The point we just selected, coming back from the planner: not an
+      // external change. Keep the visible label (never stomp it with raw
+      // coordinates) and keep `_selected` so later edits still invalidate
+      // the stored point correctly.
+      final echo = _lastEmitted != null &&
+          next.lat == _lastEmitted!.lat &&
+          next.lon == _lastEmitted!.lon;
+      if (echo) return;
+      // Reflect an externally changed selection (map tap, swap,
+      // my-location). When the selection became null, keep whatever the
+      // user is typing.
+      _lastEmitted = null;
+      _controller.text = _textFor(next);
       _selected = null;
       _suggestions = const [];
       _error = null;
+      _searched = false;
     }
   }
 
@@ -123,6 +149,7 @@ class _PlaceFieldState extends ConsumerState<PlaceField> {
     final query = raw.trim();
     _debounce?.cancel();
     _seq++; // whatever is in flight is stale now
+    _searched = false; // the current text has not been searched (yet)
 
     // Editing the text away from the selected place invalidates the stored
     // coordinates — the planner must never keep a point the text no longer
@@ -149,8 +176,13 @@ class _PlaceFieldState extends ConsumerState<PlaceField> {
         _error = null;
         _loading = false;
       });
-      _selected = PlaceSuggestion(label: query, point: coordinates);
-      widget.onSelected(coordinates);
+      // The typed text itself is the label of this point — the planner and
+      // any echo back keep showing what the user wrote, not a reformatted
+      // version of it.
+      final labeled = coordinates.copyWith(name: query);
+      _selected = PlaceSuggestion(label: query, point: labeled);
+      _lastEmitted = labeled;
+      widget.onSelected(labeled);
       return;
     }
 
@@ -175,6 +207,7 @@ class _PlaceFieldState extends ConsumerState<PlaceField> {
         if (!mounted || mySeq != _seq) return; // superseded — drop
         setState(() {
           _suggestions = results;
+          _searched = true;
           _loading = false;
         });
       } on Failure catch (e) {
@@ -212,13 +245,20 @@ class _PlaceFieldState extends ConsumerState<PlaceField> {
       );
       if (!mounted || mySeq != _seq) return;
       final label = point.name ?? suggestion.label;
+      // The planner stores the label as the point's name so every surface
+      // (fields, prayer card, waypoints, persistence) shows the place name
+      // instead of bare coordinates.
+      final resolved = point.name == null ? point.copyWith(name: label) : point;
       setState(() {
-        _selected = PlaceSuggestion(id: suggestion.id, label: label, point: point);
+        _selected =
+            PlaceSuggestion(id: suggestion.id, label: label, point: resolved);
         _controller.text = label;
         _loading = false;
+        _searched = false;
       });
       _session = _newSession(); // selection ends this autocomplete session
-      widget.onSelected(point);
+      _lastEmitted = resolved;
+      widget.onSelected(resolved);
       if (mounted) FocusScope.of(context).unfocus();
     } on Failure catch (e) {
       if (!mounted || mySeq != _seq) return;
@@ -243,6 +283,8 @@ class _PlaceFieldState extends ConsumerState<PlaceField> {
       _suggestions = const [];
       _error = null;
       _selected = null;
+      _lastEmitted = null;
+      _searched = false;
       _loading = false;
     });
     _session = _newSession();
@@ -314,7 +356,11 @@ class _PlaceFieldState extends ConsumerState<PlaceField> {
               ],
             ),
           ),
-        if (_suggestions.isEmpty &&
+        // "No results" only after an actual search came back empty — a
+        // field showing a selection (e.g. raw coordinates) was never
+        // searched, so claiming "no results" would be a lie.
+        if (_searched &&
+            _suggestions.isEmpty &&
             _controller.text.trim().length >= 2 &&
             !_loading &&
             _error == null)

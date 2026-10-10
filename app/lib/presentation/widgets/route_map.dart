@@ -29,6 +29,7 @@ class AdaptiveMap extends StatelessWidget {
     this.stops = const [],
     this.height,
     this.onMapTap,
+    this.controlsBottomInset,
   });
 
   /// Ordered points forming the polyline (a line is drawn from 2+ points).
@@ -43,13 +44,29 @@ class AdaptiveMap extends StatelessWidget {
   /// Tap on the map (not drag) → coordinates picked by the user.
   final ValueChanged<GeoPoint>? onMapTap;
 
+  /// Distance from the map's bottom edge to the zoom/my-location controls.
+  /// Hosts that float something over the bottom of the map (the home
+  /// sheet) pass their overlay's height so the controls stay reachable
+  /// above it; null uses the engine default.
+  final double? controlsBottomInset;
+
   @override
   Widget build(BuildContext context) {
     Widget map;
     if (useGoogleMaps) {
-      map = _GoogleMapSurface(points: points, stops: stops, onMapTap: onMapTap);
+      map = _GoogleMapSurface(
+        points: points,
+        stops: stops,
+        onMapTap: onMapTap,
+        controlsBottomInset: controlsBottomInset,
+      );
     } else {
-      map = _OsmMapSurface(points: points, stops: stops, onMapTap: onMapTap);
+      map = _OsmMapSurface(
+        points: points,
+        stops: stops,
+        onMapTap: onMapTap,
+        controlsBottomInset: controlsBottomInset,
+      );
     }
     if (height != null) {
       map = SizedBox(height: height, child: map);
@@ -136,11 +153,13 @@ class _GoogleMapSurface extends StatefulWidget {
     required this.points,
     required this.stops,
     this.onMapTap,
+    this.controlsBottomInset,
   });
 
   final List<GeoPoint> points;
   final List<ScheduledStop> stops;
   final ValueChanged<GeoPoint>? onMapTap;
+  final double? controlsBottomInset;
 
   @override
   State<_GoogleMapSurface> createState() => _GoogleMapSurfaceState();
@@ -288,7 +307,7 @@ class _GoogleMapSurfaceState extends State<_GoogleMapSurface> {
         ),
         Positioned(
           right: 12,
-          bottom: 96,
+          bottom: widget.controlsBottomInset ?? 96,
           child: SafeArea(
             child: _MapControls(
               onZoomIn: () => _controller?.animateCamera(gm.CameraUpdate.zoomIn()),
@@ -349,11 +368,13 @@ class _OsmMapSurface extends StatefulWidget {
     required this.points,
     required this.stops,
     this.onMapTap,
+    this.controlsBottomInset,
   });
 
   final List<GeoPoint> points;
   final List<ScheduledStop> stops;
   final ValueChanged<GeoPoint>? onMapTap;
+  final double? controlsBottomInset;
 
   @override
   State<_OsmMapSurface> createState() => _OsmMapSurfaceState();
@@ -528,26 +549,29 @@ class _OsmMapSurfaceState extends State<_OsmMapSurface> {
         Positioned(
           top: 8,
           left: 8,
-          child: Material(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.map_outlined, size: 14),
-                  const SizedBox(width: 6),
-                  Text(l10n.mapFallbackNote,
-                      style: Theme.of(context).textTheme.labelSmall),
-                ],
+          // Never sit under the status bar on full-bleed layouts.
+          child: SafeArea(
+            child: Material(
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.map_outlined, size: 14),
+                    const SizedBox(width: 6),
+                    Text(l10n.mapFallbackNote,
+                        style: Theme.of(context).textTheme.labelSmall),
+                  ],
+                ),
               ),
             ),
           ),
         ),
         Positioned(
           right: 12,
-          bottom: 72,
+          bottom: widget.controlsBottomInset ?? 72,
           child: SafeArea(
             child: _MapControls(
               onZoomIn: () => _zoom(1),

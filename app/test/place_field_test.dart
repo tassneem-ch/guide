@@ -272,4 +272,63 @@ void main() {
     expect(cleared, 1);
     await tester.pump(const Duration(milliseconds: 400)); // flush debounce
   });
+
+  testWidgets('a selection echoed back through initial keeps its label',
+      (tester) async {
+    // The planner feeds the selected point back into the field. That echo
+    // must never replace the place name with raw coordinates or drop the
+    // selection state (which would silently stop invalidating the point
+    // when the user edits the text).
+    final repo = FakeGeocodeRepository(suggestions: const [
+      PlaceSuggestion(label: 'Rome, Italy',
+          point: GeoPoint(lat: 41.9, lon: 12.5, tz: 'Europe/Rome')),
+    ]);
+    GeoPoint? chosen;
+    var cleared = 0;
+    await tester.pumpWidget(_harness(repo, () {
+      return StatefulBuilder(
+        builder: (context, setModalState) => PlaceField(
+          label: 'From',
+          icon: Icons.trip_origin_outlined,
+          initial: chosen,
+          onSelected: (p) => setModalState(() => chosen = p),
+          onCleared: () {
+            cleared++;
+            setModalState(() => chosen = null);
+          },
+        ),
+      );
+    }));
+
+    await tester.enterText(find.byType(TextField), 'Rom');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Rome, Italy'));
+    await tester.pump();
+
+    expect(find.widgetWithText(TextField, 'Rome, Italy'), findsOneWidget);
+    expect(find.text('No results'), findsNothing);
+
+    // Editing afterwards still invalidates the (now stale) selection.
+    await tester.enterText(find.byType(TextField), 'Rome, and more');
+    await tester.pump();
+    expect(cleared, 1);
+    await tester.pump(const Duration(milliseconds: 400)); // flush debounce
+  });
+
+  testWidgets('a coordinate-backed value shows no phantom no-results',
+      (tester) async {
+    // A field initialized with a nameless point shows its coordinates.
+    // Nothing was searched, so "No results" must not appear.
+    final repo = FakeGeocodeRepository();
+    await tester.pumpWidget(_harness(repo, () => PlaceField(
+          label: 'From',
+          icon: Icons.trip_origin_outlined,
+          initial: const GeoPoint(lat: 36.8, lon: 10.18),
+          onSelected: (_) {},
+        )));
+
+    expect(find.widgetWithText(TextField, '36.8, 10.18'), findsOneWidget);
+    expect(find.text('No results'), findsNothing);
+    expect(repo.suggestedQueries, isEmpty);
+  });
 }
