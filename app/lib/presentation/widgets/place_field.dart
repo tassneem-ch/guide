@@ -29,12 +29,18 @@ class PlaceField extends ConsumerStatefulWidget {
     required this.icon,
     required this.onSelected,
     this.onCleared,
+    this.onFocusChanged,
     this.initial,
   });
 
   final String label;
   final IconData icon;
   final ValueChanged<GeoPoint> onSelected;
+
+  /// Reports whether this field gained or lost focus. Owners use it to make
+  /// room for the suggestions list (e.g. by shrinking a bottom sheet) — on
+  /// small screens the list is otherwise hidden behind it.
+  final ValueChanged<bool>? onFocusChanged;
 
   /// Called when the current text no longer matches a resolved selection
   /// (cleared, edited, or replaced) — the owner should drop the stale point.
@@ -303,6 +309,16 @@ class _PlaceFieldState extends ConsumerState<PlaceField> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final hasText = _controller.text.trim().isNotEmpty;
+    // Focus is tracked on the TextField itself so the owner can react to
+    // this field only (its suggestions list below needs screen room).
+    return Focus(
+      onFocusChange: (focused) => widget.onFocusChanged?.call(focused),
+      child: _buildField(context, l10n, hasText),
+    );
+  }
+
+  Widget _buildField(
+      BuildContext context, AppLocalizations l10n, bool hasText) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

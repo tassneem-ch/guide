@@ -190,7 +190,9 @@ class ApiRouteRepository implements RouteRepository {
       'destination': destination.toJson(),
       if (waypoints.isNotEmpty)
         'waypoints': waypoints.map((w) => w.toJson()).toList(),
-      'depart_utc': departUtc.toUtc().toIso8601String(),
+      // RouteRequest's departure field is `depart_at` (the trip planner's
+      // separate model uses `depart_utc` — same instant, other endpoint).
+      'depart_at': departUtc.toUtc().toIso8601String(),
       'mode': mode.name,
       'options': options.toJson(),
       'prayer': prayer.toJson(),

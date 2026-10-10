@@ -38,6 +38,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       DraggableScrollableController();
   double _sheetExtent = 0.42; // == initialChildSize
 
+  /// How many From/To fields are focused (0 or 1 in practice; counted so a
+  /// hand-off between fields never restores the sheet in between).
+  int _focusedFields = 0;
+
+  /// The user's sheet position before a field took focus, restored after.
+  double? _extentBeforeFocus;
+
+  /// A From/To field gained or lost focus. Typing opens an in-card
+  /// suggestions list that on small screens (especially with the keyboard
+  /// open) would be hidden behind the half-expanded sheet — so shrink the
+  /// sheet to its minimum while a field is focused and put it back after.
+  void _onPlaceFocusChanged(bool focused) {
+    if (!mounted) return;
+    final first = focused && _focusedFields == 0;
+    final last = !focused && _focusedFields == 1;
+    setState(() {
+      _focusedFields += focused ? 1 : -1;
+      if (_focusedFields < 0) _focusedFields = 0;
+      if (first) _extentBeforeFocus ??= _sheetExtent;
+    });
+    const duration = Duration(milliseconds: 250);
+    if (first) {
+      _sheetController.animateTo(0.12,
+          duration: duration, curve: Curves.easeInOut);
+    } else if (last) {
+      final restore = _extentBeforeFocus ?? 0.42;
+      _extentBeforeFocus = null;
+      _sheetController.animateTo(restore,
+          duration: duration, curve: Curves.easeInOut);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -274,6 +306,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             label: l10n.fromLabel,
                             icon: Icons.trip_origin_outlined,
                             initial: form.origin,
+                            onFocusChanged: _onPlaceFocusChanged,
                             onSelected: (p) => ref
                                 .read(plannerProvider.notifier)
                                 .setOrigin(p),
@@ -298,6 +331,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             label: l10n.toLabel,
                             icon: Icons.place_outlined,
                             initial: form.destination,
+                            onFocusChanged: _onPlaceFocusChanged,
                             onSelected: (p) => ref
                                 .read(plannerProvider.notifier)
                                 .setDestination(p),
